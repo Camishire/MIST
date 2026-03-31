@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from app.models import CreateEventRequest
 from app.services.misp import create_misp_event
+from app.constants import get_all_tags, get_all_galaxies
 
 app = FastAPI(title="MIST API")
 
@@ -34,3 +35,11 @@ def create_event(request: CreateEventRequest):
         "event_id": result['Event']['id'],
         "title": request.title
     }
+
+@app.get("/api/tags/categories")  # ← Pakeistas URL
+def list_tags():  # ← SKIRTINGAS vardas!
+    return get_all_tags()  # ← Kviečia iš constants
+
+@app.get("/api/galaxies/categories")  # ← Pakeistas URL
+def list_galaxies():  # ← SKIRTINGAS vardas!
+    return get_all_galaxies()  # ← Kviečia iš constants
