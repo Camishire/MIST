@@ -1,28 +1,36 @@
+from fastapi.responses import FileResponse
 from fastapi import FastAPI
-from app.config import settings
-from app.routers import misp
+from fastapi.staticfiles import StaticFiles
+from app.models import CreateEventRequest
+from app.services.misp import create_misp_event
 
-app = FastAPI(
-    title="MISP Enrichment API",
-    description="API for simplified MISP event creation and enrichment",
-    version="1.0.0"
-)
+app = FastAPI(title="MIST API")
 
-# Include routers
-app.include_router(misp.router)
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
-async def root():
-    return {
-        "message": "MISP Enrichment API is running!",
-        "status": "ok",
-        "config_check": {
-            "misp_connected": settings.misp_url is not None,
-            "opencti_connected": settings.opencti_url is not None,
-            "elastic_connected": settings.elastic_url is not None
-        }
-    }
+def root():
+    return FileResponse("static/index.html")
 
 @app.get("/health")
-async def health_check():
-    return {"status": "healthy"}
+def health_check():
+    return {"message": "Healthy as can be!"}
+
+@app.get("/events={event_id}")
+def get_event(event_id: int):
+    return {"message": f"Event {event_id} details would be here."}
+
+@app.post("/events")
+def create_event(request: CreateEventRequest):
+    result = create_misp_event(
+        title=request.title,
+        ips=request.ips,
+        distribution=request.distribution,
+        threat_level_id=request.threat_level_id,
+        analysis=request.analysis
+    )
+    return {
+        "message": f"Event created!. <a href='https://ziurke.vilniustech.lt/events/view/{result['Event']['id']}' target='_blank'>View Event</a>",
+        "event_id": result['Event']['id'],
+        "title": request.title
+    }
