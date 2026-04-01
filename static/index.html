@@ -9,152 +9,198 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Space+Mono&display=swap" rel="stylesheet">
     
     <style>
-        :root {
-            --bg-color: #fdfafc;
-            --accent-purple: #764ba2;
-            --primary-gradient: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
-            --panel-bg: rgba(255, 255, 255, 0.85);
-            --shadow-pop: 0 15px 40px rgba(161, 140, 209, 0.15);
-        }
+    :root {
+        --bg-color: #fdfafc;
+        --accent-purple: #764ba2;
+        --primary-gradient: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+        --panel-bg: rgba(255, 255, 255, 0.85);
+        --shadow-pop: 0 15px 40px rgba(161, 140, 209, 0.15);
+    }
 
-        body {
-            background-color: var(--bg-color);
-            font-family: 'Poppins', sans-serif;
-            color: #444;
-            min-height: 100vh;
-            overflow-x: hidden;
-            padding: 40px 0;
-        }
+    body {
+        background-color: var(--bg-color);
+        font-family: 'Poppins', sans-serif;
+        color: #444;
+        min-height: 100vh;
+        overflow-x: hidden;
+        padding: 40px 0;
+    }
 
-        /* Marquee foninis tekstas */
-        body::before {
-            content: "MISP MIST MISP MIST MISP MIST";
-            position: fixed; top: 15%; left: -10%; font-size: 12rem; font-weight: 800;
-            color: rgba(161, 140, 209, 0.04); white-space: nowrap; z-index: -1;
-            animation: marquee 80s linear infinite; pointer-events: none;
-        }
+    /* Marquee foninis tekstas */
+    body::before {
+        content: "MISP MIST MISP MIST MISP MIST";
+        position: fixed;
+        top: 15%;
+        left: -10%;
+        font-size: 12rem;
+        font-weight: 800;
+        color: rgba(161, 140, 209, 0.04);
+        white-space: nowrap;
+        z-index: -1;
+        animation: marquee 80s linear infinite;
+        pointer-events: none;
+    }
 
-        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    @keyframes marquee {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
 
-        .page-wrapper {
-            max-width: 1300px;
-            margin: 0 auto;
-            padding: 0 20px;
-            display: grid;
-            grid-template-columns: 1.2fr 0.8fr 1fr;
-            gap: 30px;
-        }
+    .page-wrapper {
+        max-width: 1300px;
+        margin: 0 auto;
+        padding: 0 20px;
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr 1fr;
+        gap: 30px;
+    }
 
-        .section-panel {
-            background: var(--panel-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            border-radius: 24px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-            transition: all 0.4s;
-            position: relative;
-            overflow: visible !important; /* Kad dropdownai nebūtų nukirpti */
-        }
+    .section-panel {
+        background: var(--panel-bg);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        border-radius: 24px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        transition: all 0.4s;
+        position: relative;
+        overflow: visible !important;
+    }
 
-        .section-title {
-            font-family: 'Space Mono', monospace;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--accent-purple);
-            margin-bottom: 20px;
-            border-bottom: 1px solid rgba(118, 75, 162, 0.1);
-            padding-bottom: 8px;
-        }
+    .section-title {
+        font-family: 'Space Mono', monospace;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        color: var(--accent-purple);
+        margin-bottom: 20px;
+        border-bottom: 1px solid rgba(118, 75, 162, 0.1);
+        padding-bottom: 8px;
+    }
 
-        /* Sluoksniai (z-index) */
-        .header-area { grid-column: 1 / -1; margin-bottom: 10px; }
-        .meta-area   { grid-column: 1 / 3; z-index: 15; } /* Aukščiausias metaduomenims */
-        .tags-area   { grid-column: 3 / 4; z-index: 20; } /* Aukščiausias dropdownams */
-        .bulk-area   { grid-column: 1 / 3; z-index: 5; }
-        .galaxy-area { grid-column: 3 / 4; z-index: 10; }
-        .table-area  { grid-column: 1 / -1; z-index: 1; }
+    /* Grid areas */
+    .header-area { grid-column: 1 / -1; margin-bottom: 10px; }
+    .meta-area   { grid-column: 1 / 3; z-index: 15; }
+    .tags-area   { grid-column: 3 / 4; z-index: 20; }
+    .bulk-area   { grid-column: 1 / 3; z-index: 5; }
+    .galaxy-area { grid-column: 3 / 4; z-index: 10; }
+    .table-area  { grid-column: 1 / -1; z-index: 1; }
 
-        /* Dropdown & Hover stilius */
-        .dropdown-menu {
-            z-index: 9999 !important;
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.15) !important;
-            background: rgba(255, 255, 255, 0.98);
-        }
+    /* Dropdown styling */
+    .dropdown-menu {
+        z-index: 9999 !important;
+        border: none;
+        border-radius: 16px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.15) !important;
+        background: rgba(255, 255, 255, 0.98);
+    }
 
-        .dropend:hover > .dropdown-menu {
-            display: block !important;
-            position: absolute;
-            left: 100%;
-            top: 0;
-            margin-left: 5px;
-        }
+    /* Nested dropdown with hover delay */
+    /* Nested dropdown - NO GAP between parent and child */
+    .dropend {
+        position: relative;
+    }
 
-        /* Tooltip stilius */
-        .tooltip-inner {
-            background-color: var(--accent-purple) !important;
-            border-radius: 10px;
-            padding: 8px 12px;
-            font-size: 0.75rem;
-        }
+    .dropend .dropdown-menu {
+        position: absolute;
+        left: 100%;
+        top: 0;
+        margin-left: -5px; /* NEGATIVE margin eliminates gap! */
+        padding-left: 10px; /* Add padding inside instead */
+        display: none;
+    }
 
-        /* Ženkliukai */
-        .badge-container {
-            min-height: 80px;
-            background: rgba(241, 238, 255, 0.4);
-            border: 2px dashed #dcd6f7;
-            border-radius: 18px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            padding: 15px;
-        }
+    .dropend:hover > .dropdown-menu,
+    .dropend > .dropdown-menu:hover {
+        display: block !important;
+    }
 
-        .misp-badge {
-            background: white;
-            border: 1px solid #dcd6f7;
-            padding: 6px 14px;
-            border-radius: 50px;
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-        }
+    /* Smooth transition */
+    .dropdown-menu {
+        transition: all 0.2s ease;
+    }
 
-        .misp-badge .remove {
-            margin-left: 10px;
-            cursor: pointer;
-            color: #ff8a8a;
-            font-weight: bold;
-        }
+    /* Tooltip styling */
+    .tooltip-inner {
+        background-color: var(--accent-purple) !important;
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-size: 0.75rem;
+    }
 
-        .btn-create {
-            background: var(--primary-gradient);
-            color: white;
-            border: none;
-            padding: 18px 60px;
-            border-radius: 50px;
-            font-weight: 800;
-            box-shadow: 0 10px 25px rgba(161, 140, 209, 0.4);
-            transition: 0.3s;
-        }
+    /* Badge container */
+    .badge-container {
+        min-height: 80px;
+        background: rgba(241, 238, 255, 0.4);
+        border: 2px dashed #dcd6f7;
+        border-radius: 18px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 15px;
+    }
 
-        .btn-create:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(161, 140, 209, 0.5);
-            color: white;
-        }
+    /* Badge styling */
+    .misp-badge {
+        background: white;
+        border: 1px solid #dcd6f7;
+        padding: 6px 14px;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        transition: all 0.2s ease;
+    }
 
-        .form-control, .form-select {
-            border-radius: 12px;
-            border: 2px solid #f1eeff;
-            padding: 12px;
-            transition: all 0.3s;
-        }
-    </style>
+    .misp-badge:hover {
+        box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+        transform: translateY(-1px);
+    }
+
+    .misp-badge .remove {
+        margin-left: 10px;
+        cursor: pointer;
+        color: #ff8a8a;
+        font-weight: bold;
+        transition: color 0.2s ease;
+    }
+
+    .misp-badge .remove:hover {
+        color: #ff4d4d;
+    }
+
+    /* Create button */
+    .btn-create {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 18px 60px;
+        border-radius: 50px;
+        font-weight: 800;
+        box-shadow: 0 10px 25px rgba(161, 140, 209, 0.4);
+        transition: all 0.5s ease;
+    }
+
+    .btn-create:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 30px rgba(161, 140, 209, 0.5);
+        color: white;
+    }
+
+    /* Form controls */
+    .form-control, .form-select {
+        border-radius: 12px;
+        border: 2px solid #f1eeff;
+        padding: 12px;
+        transition: all 0.5s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--accent-purple);
+        box-shadow: 0 0 0 0.2rem rgba(118, 75, 162, 0.15);
+    }
+</style>
 </head>
 <body>
 
@@ -245,8 +291,15 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/static/script.js"></script> <script>
-    // Automatiškai nustatome šiandienos datą
+
+<!-- Mūsų failai TVARKOJE: -->
+<script src="/static/APIgetter.js"></script>      <!-- 1. API calls -->
+<script src="/static/Dropdowns.js"></script>      <!-- 2. Rendering -->
+<script src="/static/BadgeManager.js"></script>  <!-- Naujas! -->
+<script src="/static/setup.js"></script>          <!-- 3. Initialization -->
+
+<!-- Set default date -->
+<script>
     document.getElementById('eventDate').valueAsDate = new Date();
 </script>
 

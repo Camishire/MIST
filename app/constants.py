@@ -87,9 +87,43 @@ CATEGORY_TYPES = {
     ]
 }
 
+DISTRIBUTION_OPTIONS = {
+    0: "Your organisation only",
+    1: "This community only",
+    2: "Connected communities",
+    3: "All communities",
+    4: "Sharing group",
+}
+
+THREAT_LEVEL_OPTIONS = {
+    1: "High",
+    2: "Medium",
+    3: "Low",
+    4: "Undefined"
+}
+
+ANALYSIS_OPTIONS = {
+    0: "Initial",
+    1: "Ongoing",
+    2: "Completed",
+}
+
+
 # ============================================
 # Helper funkcijos
 # ============================================
+
+def get_distribution_options():
+    """Gauti distribution options kaip dict"""
+    return DISTRIBUTION_OPTIONS  # Tiesiog grąžinam dict!
+
+def get_threat_level_options():
+    """Gauti threat level options kaip dict"""
+    return THREAT_LEVEL_OPTIONS
+
+def get_analysis_options():
+    """Gauti analysis options kaip dict"""
+    return ANALYSIS_OPTIONS
 
 def get_all_tags():
     """Gauti visus tag'us kaip dictionary pagal kategorijas"""
