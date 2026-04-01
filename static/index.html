@@ -1,307 +1,184 @@
 <!doctype html>
-<html lang="en">
+<html lang="lt">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>MIST - MISP Event Creator</title>
+    <title>MIST Creator | Dynamic Interface</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&family=Space+Mono&display=swap" rel="stylesheet">
+    
     <style>
+        :root {
+            --bg-color: #fdfafc;
+            --accent-purple: #764ba2;
+            --primary-gradient: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+            --panel-bg: rgba(255, 255, 255, 0.85);
+            --shadow-pop: 0 15px 40px rgba(161, 140, 209, 0.15);
+        }
+
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: var(--bg-color);
+            font-family: 'Poppins', sans-serif;
+            color: #444;
             min-height: 100vh;
+            overflow-x: hidden;
             padding: 40px 0;
         }
-        
-        .container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            padding: 40px;
-            max-width: 1200px;
+
+        body::before {
+            content: "MISP MIST MISP MIST MISP MIST";
+            position: fixed; top: 15%; left: -10%; font-size: 12rem; font-weight: 800;
+            color: rgba(161, 140, 209, 0.04); white-space: nowrap; z-index: -1;
+            animation: marquee 80s linear infinite; pointer-events: none;
         }
-        
-        h3 {
-            color: #667eea;
-            font-weight: bold;
-            font-size: 2.5rem;
-            margin-bottom: 30px;
-            text-align: center;
+
+        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+        .page-wrapper {
+            max-width: 1300px; margin: 0 auto; padding: 0 20px;
+            display: grid; grid-template-columns: 1.2fr 0.8fr 1fr; gap: 30px;
         }
-        
+
+        .section-panel {
+            background: var(--panel-bg); backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 24px;
+            padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            transition: all 0.4s; position: relative; overflow: visible !important;
+        }
+
         .section-title {
-            color: #495057;
-            font-weight: 600;
-            font-size: 1.2rem;
-            margin-top: 30px;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
-        }
-        
-        .form-label {
-            font-weight: 600;
-            color: #495057;
-            margin-bottom: 8px;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            border-radius: 10px;
-            padding: 8px 16px;
-        }
-        
-        .btn-success {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            border: none;
-            border-radius: 15px;
-            padding: 15px 50px;
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-        
-        .btn-secondary {
-            border-radius: 10px;
-        }
-        
-        .form-control, .form-select {
-            border-radius: 10px;
-            border: 2px solid #e9ecef;
-        }
-        
-        .form-control:focus, .form-select:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-        
-        .table {
-            margin-top: 20px;
-        }
-        
-        .table th {
-            background: #667eea;
-            color: white;
-        }
-        
-        .btn-sm {
-            padding: 4px 12px;
-            font-size: 0.875rem;
-        }
-        
-        .tag-badge, .galaxy-badge {
-            display: inline-block;
-            background: #667eea;
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            margin: 5px;
-            font-size: 0.9rem;
-        }
-        
-        .badge-remove {
-            cursor: pointer;
-            margin-left: 8px;
-            font-weight: bold;
-        }
-        
-        .badge-remove:hover {
-            color: #ff6b6b;
-        }
-        
-        #selectedTags, #selectedGalaxies {
-            min-height: 60px;
-            border: 2px dashed #e9ecef;
-            border-radius: 10px;
-            padding: 15px;
-            margin-top: 10px;
+            font-family: 'Space Mono', monospace; font-size: 0.7rem; text-transform: uppercase;
+            letter-spacing: 2px; color: var(--accent-purple); margin-bottom: 20px;
+            border-bottom: 1px solid rgba(118, 75, 162, 0.1); padding-bottom: 8px;
         }
 
-        /* Nested dropdown styling - CRITICAL */
-        .dropend {
-            position: relative;
-        }
-        
-        .dropend .dropdown-menu {
-            position: absolute;
-            left: 100%;
-            top: 0;
-            margin-left: 0.125rem;
-            display: none;
-        }
+        /* Grid zonų paskirstymas */
+        .header-area { grid-column: 1 / -1; margin-bottom: 10px; }
+        .meta-area   { grid-column: 1 / 3; z-index: 5; }
+        .tags-area   { grid-column: 3 / 4; z-index: 10; }
+        .bulk-area   { grid-column: 1 / 3; z-index: 4; }
+        .galaxy-area { grid-column: 3 / 4; z-index: 9; }
+        .table-area  { grid-column: 1 / -1; z-index: 1; }
 
-        .dropend .dropdown-menu.show {
-            display: block !important;
-        }
-
-        .dropdown-item.dropdown-toggle::after {
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%) rotate(-90deg);
-        }
-
-        .dropdown-item.dropdown-toggle {
-            position: relative;
-            padding-right: 30px;
-        }
-
-        .dropdown-item.dropdown-toggle:hover {
-            background-color: #e9ecef;
-        }
-
+        /* Dropdownai */
         .dropdown-menu {
-            max-height: 400px;
-            overflow-y: auto;
+            z-index: 9999 !important; border: none; border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15) !important;
+            background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px);
+            margin: 0;
+        }
+
+        .dropend:hover > .dropdown-menu {
+        display: block !important;
+        position: absolute;
+        left: 100%;
+        top: 0;
+        margin-top: -5px; /* Nedidelis susilygiavimas */
+    }
+
+        /* Tooltip stilius */
+        .tooltip-inner {
+            background-color: var(--accent-purple) !important;
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .bs-tooltip-end .tooltip-arrow::before { border-right-color: var(--accent-purple) !important; }
+
+        /* Badges */
+        .badge-container {
+            min-height: 80px; background: rgba(241, 238, 255, 0.4);
+            border: 2px dashed #dcd6f7; border-radius: 18px;
+            display: flex; flex-wrap: wrap; gap: 8px; padding: 15px;
+        }
+
+        .misp-badge {
+            background: white; border: 1px solid #dcd6f7; padding: 6px 14px;
+            border-radius: 50px; font-size: 0.8rem; display: flex; align-items: center;
+        }
+
+        .misp-badge .remove { margin-left: 10px; cursor: pointer; color: #ff8a8a; }
+
+        .btn-create {
+            background: var(--primary-gradient); color: white; border: none;
+            padding: 18px 60px; border-radius: 50px; font-weight: 800;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="row">
-            <div class="col-12">
-                <h3>🛡️ MIST - MISP Event Creator</h3>
-            </div>
+
+<div class="page-wrapper">
+    <div class="header-area d-flex justify-content-between align-items-end">
+        <div>
+            <h1 class="fw-800 m-0" style="letter-spacing: -2px; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">MIST.creator</h1>
+            <p class="text-muted m-0">Advanced MISP Event Generation Tool</p>
         </div>
-
-        <!-- Event Metadata Section -->
-        <div class="section-title">📋 Event Metadata</div>
-        
-        <div class="row g-3">
-            <!-- Date -->
-            <div class="col-md-3">
-                <label class="form-label">Date</label>
-                <input type="date" class="form-control" id="eventDate" />
-            </div>
-            
-            <!-- Distribution -->
-            <div class="col-md-3">
-                <label class="form-label">Distribution</label>
-                <select class="form-select" id="distribution">
-                    <option value="0">Your organisation only (0)</option>
-                    <option value="1">This community only (1)</option>
-                    <option value="2" selected>Connected communities (2)</option>
-                    <option value="3">All communities (3)</option>
-                    <option value="4">Sharing group (4)</option>
-                </select>
-            </div>
-            
-            <!-- Threat Level -->
-            <div class="col-md-3">
-                <label class="form-label">Threat Level</label>
-                <select class="form-select" id="threatLevel">
-                    <option value="1">High (1)</option>
-                    <option value="2" selected>Medium (2)</option>
-                    <option value="3">Low (3)</option>
-                    <option value="4">Undefined (4)</option>
-                </select>
-            </div>
-            
-            <!-- Analysis -->
-            <div class="col-md-3">
-                <label class="form-label">Analysis</label>
-                <select class="form-select" id="analysis">
-                    <option value="0">Initial (0)</option>
-                    <option value="1" selected>Ongoing (1)</option>
-                    <option value="2">Completed (2)</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Event Info -->
-        <div class="row mt-3">
-            <div class="col-12">
-                <label class="form-label">Event Info</label>
-                <input type="text" class="form-control" id="eventInfo" placeholder="Enter event description..." />
-            </div>
-        </div>
-
-        <!-- Tags Section -->
-        <div class="section-title">🏷️ Tags (Max 5)</div>
-
-        <div class="row">
-            <div class="col-12">
-                <div id="tagsTabsContainer">
-                    <!-- Tabs bus generuojami JavaScript -->
-                </div>
-                
-                <div id="selectedTags" class="mt-3">
-                    <small class="text-muted">Selected tags will appear here...</small>
-                </div>
-            </div>
-        </div>
-
-        <!-- Galaxies Section -->
-        <div class="section-title">🌌 Galaxies (Max 7)</div>
-
-        <div class="row">
-            <div class="col-12">
-                <div id="galaxiesTabsContainer">
-                    <!-- Tabs bus generuojami JavaScript -->
-                </div>
-                
-                <div id="selectedGalaxies" class="mt-3">
-                    <small class="text-muted">Selected galaxies will appear here...</small>
-                </div>
-            </div>
-        </div>
-
-        <!-- Bulk IP Upload Section -->
-        <div class="section-title">📤 Upload IPs in Bulk</div>
-        
-        <div class="row">
-            <div class="col-12">
-                <label class="form-label">IP Addresses (one per line)</label>
-                <textarea class="form-control" id="bulkIPs" rows="5" placeholder="192.168.1.1&#10;10.0.0.1&#10;172.16.0.1"></textarea>
-                <button type="button" class="btn btn-primary mt-2" id="uploadIPsBtn">📤 Upload IPs to Table</button>
-            </div>
-        </div>
-
-        <!-- Attributes Table Section -->
-        <div class="section-title">📊 Attributes Table</div>
-        
-        <div class="row">
-            <div class="col-12">
-                <button type="button" class="btn btn-secondary btn-sm mb-2" id="addRowBtn">+ Add Row Manually</button>
-                
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover" id="attributesTable">
-                        <thead>
-                            <tr>
-                                <th>Date</th>
-                                <th>Category</th>
-                                <th>Type</th>
-                                <th>Value</th>
-                                <th>First Seen</th>
-                                <th>Last Seen</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Rows will be added here dynamically -->
-                            <tr>
-                                <td colspan="7" class="text-center text-muted">No attributes yet. Add IPs or create manually.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Submit Button -->
-        <div class="row mt-4">
-            <div class="col-12 text-center">
-                <button type="button" class="btn btn-success" id="submitBtn">
-                    ✨ Create MISP Event
-                </button>
-            </div>
-        </div>
-
-        <!-- Result -->
-        <div id="result" class="mt-4"></div>
+        <div class="text-end small text-muted">V2.2 / 2026</div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/static/script.js"></script>
+
+    <div class="section-panel meta-area">
+        <div class="section-title">01 / Event Metadata</div>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="small fw-600 mb-1 opacity-50">DISTRIBUTION</label>
+                <div id="distributionDropdownRoot"></div>
+            </div>
+
+            <div class="col-md-4">
+                <label class="small fw-600 mb-1 opacity-50">THREAT LEVEL</label>
+                <div id="threatLevelDropdownRoot"></div>
+            </div>
+
+            <div class="col-md-4">
+                <label class="small fw-600 mb-1 opacity-50">ANALYSIS</label>
+                <div id="analysisDropdownRoot"></div>
+            </div>
+            <div class="col-12">
+                <label class="small fw-600 mb-1 opacity-50">EVENT INFO / DESCRIPTION</label>
+                <input type="text" class="form-control" placeholder="Aprašymas...">
+            </div>
+        </div>
+    </div>
+
+    <div class="section-panel tags-area">
+        <div class="section-title">02 / Tags</div>
+        <div id="tagsDropdownRoot"></div>
+        <div id="selectedTags" class="badge-container mt-3">
+            <small class="text-muted w-100 text-center">Nieko nepasirinkta</small>
+        </div>
+    </div>
+
+    <div class="section-panel bulk-area">
+        <div class="section-title">03 / Bulk IP Upload</div>
+        <textarea class="form-control" rows="4" placeholder="IP adresai..."></textarea>
+    </div>
+
+    <div class="section-panel galaxy-area">
+        <div class="section-title">04 / Galaxies</div>
+        <div id="galaxyDropdownRoot"></div>
+        <div id="selectedGalaxies" class="badge-container mt-3">
+            <small class="text-muted w-100 text-center">Nieko nepasirinkta</small>
+        </div>
+    </div>
+
+    <div class="section-panel table-area">
+        <div class="section-title">05 / Event Attributes</div>
+        <div class="table-responsive">
+            <table class="table align-middle m-0">
+                <thead><tr><th>Category</th><th>Type</th><th>Value</th><th class="text-end">Action</th></tr></thead>
+                <tbody id="attrTableBody"><tr><td colspan="4" class="text-center py-5 text-muted small">Lentelė tuščia.</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="col-12 text-center py-5">
+        <button class="btn btn-create" id="submitBtn">✨ CREATE MISP EVENT</button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/static/script.js"></script> 
 </body>
 </html>
