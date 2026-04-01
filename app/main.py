@@ -1,9 +1,12 @@
 from fastapi.responses import FileResponse
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
+from pydantic.v1 import BaseModel
 from app.models import CreateEventRequest
 from app.services.misp import create_misp_event
 from app.constants import get_all_tags, get_all_galaxies
+from app.constants import get_all_categories, get_types_for_category
+from app.services.misp_parser import parse_bulk_upload
 
 app = FastAPI(title="MIST API")
 
@@ -43,3 +46,28 @@ def list_tags():  # ← SKIRTINGAS vardas!
 @app.get("/api/galaxies/categories")  # ← Pakeistas URL
 def list_galaxies():  # ← SKIRTINGAS vardas!
     return get_all_galaxies()  # ← Kviečia iš constants
+
+@app.get("/api/categories")
+def get_categories():
+    """Gauti visas attribute kategorijas"""
+    return {"categories": get_all_categories()}
+
+@app.get("/api/categories/{category}/types")
+def get_category_types(category: str):
+    """Gauti types konkrečiai kategorijai"""
+    types = get_types_for_category(category)
+    return {"category": category, "types": types}
+
+class BulkUploadRequest(BaseModel):
+    ips: list[str]
+
+@app.post("/api/bulk-upload")
+def bulk_upload(request: BulkUploadRequest):
+    print(f"Received bulk upload: {request.ips}")  # Debug print
+    """Priima bulk duomenis ir grąžina parsed attributes"""
+    if not request.ips:
+        raise HTTPException(status_code=400, detail="No data provided")
+    
+    result = parse_bulk_upload(request.ips)
+    print(f"Parsed attributes: {result}")  # Debug print
+    return result

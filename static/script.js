@@ -1,94 +1,113 @@
+// ==========================================
+// MOCK DUOMENYS (Pakaitalas API užklausoms)
+// ==========================================
+const mockTagsData = {
+    "tlp": [
+        "{'tlp:clear', 'You can share this with anyone, without restriction.'}",
+        "{'tlp:green', 'You can share this with members of your organization only.'}",
+        "{'tlp:amber', 'You can share this with members of your organization and other organizations you trust.'}",
+        "{'tlp:red', 'You can share this with members of your organization only.'}"
+    ],
+    "threat_level": [
+        "{'cert-ist:threat_level=\"high\"', 'High severity threat that requires immediate attention.'}",
+        "{'cert-ist:threat_level=\"medium\"', 'Medium severity threat that requires monitoring.'}",
+        "{'cert-ist:threat_level=\"low\"', 'Low severity threat that requires minimal attention.'}"
+    ],
+    "malware_action": [
+        "{'veris:action:malware:variety=\"Backdoor\"', 'Allows unauthorized access to a computer.'}",
+        "{'veris:action:malware:variety=\"Ransomware\"', 'Encrypts files and demands payment.'}"
+    ],
+    "hacking_action": [
+        "{'veris:action:hacking:variety=\"Brute force\"', 'Trying many possible passwords.'}",
+        "{'veris:action:hacking:variety=\"SQLi\"', 'Exploits vulnerabilities in SQL databases.'}"
+    ]
+};
+
+const mockGalaxiesData = {
+    "mitre_attack": [
+        "{'misp-galaxy:mitre-attack-pattern=\"Phishing - T1566\"', 'Tricking individuals into providing info.'}",
+        "{'misp-galaxy:mitre-attack-pattern=\"Brute Force - T1110\"', 'Trying many passwords to gain access.'}"
+    ],
+    "country": [
+        "misp-galaxy:country=\"lithuania\"",
+        "misp-galaxy:country=\"estonia\""
+    ],
+    "sector": [
+        "misp-galaxy:sector=\"Higher education\"",
+        "misp-galaxy:sector=\"Financial services\""
+    ]
+};
+
+// ==========================================
+// KONSTANTOS IR KONFIGŪRACIJA
+// ==========================================
 let selectedTags = [];
 let selectedGalaxies = [];
 
-const MAX_TAGS = 5;
-const MAX_GALAXIES = 7;
+const MAX_TAGS = 10;
+const MAX_GALAXIES = 10;
 
 const categoryLabels = {
     'tlp': '🔴 TLP',
     'threat_level': '🚨 Threat Level',
-    'source_type': '🔍 Source',
-    'workflow': '📊 Workflow',
     'malware_action': '🦠 Malware',
     'hacking_action': '⚡ Hacking',
-    'social_action': '🎭 Social',
-    'admiralty_scale': '⭐ Admiralty',
-    'country': '📍 Country',
-    'sector': '🏢 Sector',
     'mitre_attack': '🎯 MITRE ATT&CK',
-    'threat_actor': '👤 Actor',
-    'ransomware': '🔒 Ransomware',
-    'tool': '🔧 Tool',
-    'malware': '🦠 Malware'
+    'country': '📍 Country',
+    'sector': '🏢 Sector'
 };
 
-const distributionLabels = {
-    0: 'Your Organisation Only',
-    1: 'This community only',
-    2: 'Connected communities',
-    3: 'All communities',
-    4: 'Sharing group',
-}
+const distributionLabels = { 0: 'Your Organisation Only', 1: 'This community only', 2: 'Connected communities', 3: 'All communities' };
+const threatLevelLabels = { 1: 'Low', 2: 'Medium', 3: 'High', 4: 'Undefined' };
+const analysisLabels = { 0: 'Initial', 1: 'Ongoing', 2: 'Completed' };
 
-const threatLevelLabels = {
-    1: 'Low',
-    2: 'Medium',
-    3: 'High',
-    4: 'Undefined'
-};
+// ==========================================
+// PAGALBINĖS FUNKCIJOS
+// ==========================================
 
-const analysisLabels = {
-    0: 'Initial',
-    1: 'Ongoing',
-    2: 'Completed'
-};
-
-/**
- * Pagalbinė funkcija ištraukti duomenis iš Python set stringo: "{'val', 'desc'}"
- */
 function parsePythonSet(setString) {
     if (typeof setString !== 'string' || !setString.startsWith('{')) {
         return { value: setString, description: "" };
     }
-    // Pašaliname skliaustelius ir suskaldome pagal kabutes
     const parts = setString.replace(/[{}]/g, "").split(/', '|", "/);
     let val1 = parts[0].replace(/['"]/g, "").trim();
     let val2 = parts[1] ? parts[1].replace(/['"]/g, "").trim() : "";
 
-    // Logika: MISP reikšmė paprastai turi ":" arba "="
     if (val2 && !val1.includes(':') && !val1.includes('=') && (val2.includes(':') || val2.includes('='))) {
         return { value: val2, description: val1 };
     }
     return { value: val1, description: val2 };
 }
 
-async function loadData() {
-    try {
-        const [tagsRes, galaxiesRes] = await Promise.all([
-            fetch('/api/tags/categories'),
-            fetch('/api/galaxies/categories')
-        ]);
-
-        const tagsData = await tagsRes.json();
-        const galaxiesData = await galaxiesRes.json();
-
-        renderNestedDropdown('tagsDropdownRoot', tagsData, 'Tags', 'selectedTags');
-        renderNestedDropdown('galaxyDropdownRoot', galaxiesData, 'Galaxies', 'selectedGalaxies');
-
-        // Inicijuojame Bootstrap Tooltipus po to, kai sugeneruojame HTML
-        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.map(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
-
-        renderSimpleDropdown('distributionDropdownRoot', distributionLabels, 'Distribution');
-        renderSimpleDropdown('threatLevelDropdownRoot', threatLevelLabels, 'Threat Level');
-        renderSimpleDropdown('analysisDropdownRoot', analysisLabels, 'Analysis');
-
-    } catch (error) {
-        console.error('Klaida kraunant duomenis:', error);
+function formatTagName(tag) {
+    if (!tag) return "";
+    if (tag.includes('=')) {
+        const match = tag.match(/"(.+?)"/);
+        if (match) return match[1].charAt(0).toUpperCase() + match[1].slice(1);
     }
+    if (tag.includes(':')) {
+        const lastPart = tag.split(':').pop();
+        return lastPart.charAt(0).toUpperCase() + lastPart.slice(1);
+    }
+    return tag;
 }
+
+function formatGalaxyName(galaxy) {
+    if (!galaxy) return "";
+    const match = galaxy.match(/"(.+?)"/);
+    if (match) return match[1];
+    if (galaxy.includes(':')) return galaxy.split(':').pop();
+    return galaxy;
+}
+
+function escapeJs(text) {
+    if (!text) return "";
+    return text.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+}
+
+// ==========================================
+// RENDERINIMO FUNKCIJOS
+// ==========================================
 
 function renderNestedDropdown(containerId, data, typeLabel, targetListId) {
     const container = document.getElementById(containerId);
@@ -97,14 +116,13 @@ function renderNestedDropdown(containerId, data, typeLabel, targetListId) {
     let html = `
         <div class="dropdown">
             <button class="btn btn-white border w-100 dropdown-toggle shadow-sm d-flex justify-content-between align-items-center" 
-                    type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" style="border-radius: 12px;">
+                    type="button" data-bs-toggle="dropdown" style="border-radius: 12px;">
                 Pasirinkti ${typeLabel}
             </button>
             <ul class="dropdown-menu w-100 shadow-lg border-0">`;
 
     for (const [category, items] of Object.entries(data)) {
-        const label = categoryLabels[category] || category.replace(/_/g, ' ').toUpperCase();
-        
+        const label = categoryLabels[category] || category.toUpperCase();
         html += `
             <li class="dropend">
                 <a class="dropdown-item dropdown-toggle d-flex justify-content-between align-items-center py-2" href="#">
@@ -114,39 +132,18 @@ function renderNestedDropdown(containerId, data, typeLabel, targetListId) {
         
         items.forEach(rawItem => {
             const { value, description } = parsePythonSet(rawItem);
-            const formattedName = typeLabel === 'Tags' ? formatTagName(value) : formatGalaxyName(value);
-            
+            const formatted = typeLabel === 'Tags' ? formatTagName(value) : formatGalaxyName(value);
             html += `<li>
                 <a class="dropdown-item small py-2" href="#" 
-                   data-bs-toggle="tooltip" 
-                   data-bs-placement="right" 
-                   title="${escapeJs(description)}"
+                   data-bs-toggle="tooltip" data-bs-placement="right" title="${escapeJs(description)}"
                    onclick="addItem('${escapeJs(value)}', '${targetListId}')">
-                   ${formattedName}
+                   ${formatted}
                 </a>
             </li>`;
         });
-
         html += `</ul></li>`;
     }
-
     html += `</ul></div>`;
-    container.innerHTML = html;
-}
-
-function renderSimpleDropdown(containerId, labels, typeLabel) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-
-    let html = `
-        <select class="form-select shadow-sm" style="border-radius: 12px;">
-            <option selected disabled>Pasirinkti ${typeLabel}</option>`;
-
-    for (const [value, label] of Object.entries(labels)) {
-        html += `<option value="${value}">${label}</option>`;
-    }
-
-    html += `</select>`;
     container.innerHTML = html;
 }
 
@@ -156,10 +153,7 @@ function addItem(value, listType) {
     const max = isTag ? MAX_TAGS : MAX_GALAXIES;
 
     if (list.includes(value)) return;
-    if (list.length >= max) {
-        alert(`Maksimalus kiekis (${max}) pasiektas!`);
-        return;
-    }
+    if (list.length >= max) return;
 
     list.push(value);
     renderBadges(listType);
@@ -192,59 +186,45 @@ function removeItem(index, listType) {
     renderBadges(listType);
 }
 
-/**
- * Formatuoja Tagų pavadinimus (pvz., tlp:clear -> Clear)
- */
-function formatTagName(tag) {
-    if (!tag) return "";
+// ==========================================
+// INICIJAVIMAS (DOM READY)
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Užkrauname paprastus dropdown'us
+    // Pridėkite šias eilutes į loadData() funkciją po galaxiesData gavimo:
 
-    // Jei yra lygybės ženklas (pvz., cert-ist:threat_level="high")
-    if (tag.includes('=')) {
-        const parts = tag.split('=');
-        const value = parts[parts.length - 1];
-        // Pašaliname kabutes jei yra
-        const cleanValue = value.replace(/^"|"$/g, '');
-        return cleanValue.toUpperCase();
+// Mock duomenys paprastiems dropdown'ams
+    const distributionLabels = { 0: 'Your Organisation Only', 1: 'This community only', 2: 'Connected communities', 3: 'All communities' };
+    const threatLevelLabels = { 1: 'Low', 2: 'Medium', 3: 'High', 4: 'Undefined' };
+    const analysisLabels = { 0: 'Initial', 1: 'Ongoing', 2: 'Completed' };
+
+    // Iškviečiame generavimo funkciją metaduomenims
+    renderSimpleDropdown('distributionDropdownRoot', distributionLabels, 'Distribution');
+    renderSimpleDropdown('threatLevelDropdownRoot', threatLevelLabels, 'Threat Level');
+    renderSimpleDropdown('analysisDropdownRoot', analysisLabels, 'Analysis');
+
+    // Taip pat įsitikinkite, kad kviečiate Tags ir Galaxies generavimą:
+    renderNestedDropdown('tagsDropdownRoot', tagsData, 'Tags', 'selectedTags');
+    renderNestedDropdown('galaxyDropdownRoot', galaxiesData, 'Galaxies', 'selectedGalaxies');
+    
+    // Suaktyviname Tooltipus
+    setTimeout(() => {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(t => new bootstrap.Tooltip(t));
+    }, 500);
+});
+
+function renderSimpleDropdown(containerId, labels, typeLabel) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    let html = `<select class="form-select shadow-sm" style="border-radius: 12px;">
+        <option selected disabled>Pasirinkti ${typeLabel}...</option>`;
+    
+    for (const [value, label] of Object.entries(labels)) {
+        html += `<option value="${value}">${label}</option>`;
     }
-
-    // Jei yra tik dvitaškis (pvz., tlp:amber+strict)
-    if (tag.includes(':')) {
-        const parts = tag.split(':');
-        const value = parts[parts.length - 1];
-        const cleanValue = value.replace(/^"|"$/g, '');
-        return cleanValue.toUpperCase();
-    }
-
-    return tag;
+    
+    html += `</select>`;
+    container.innerHTML = html;
 }
-
-/**
- * Formatuoja Galaxy pavadinimus (pvz., misp-galaxy:sector="Higher education" -> Higher education)
- */
-function formatGalaxyName(galaxy) {
-    if (!galaxy) return "";
-
-    const match = galaxy.match(/"(.+?)"/);
-
-    if (galaxy.includes('=')) {
-        const parts = galaxy.split('=');
-        const value = parts[parts.length - 1];
-        // Pašaliname kabutes jei yra
-        const cleanValue = value.replace(/^"|"$/g, '');
-        return cleanValue.toUpperCase();
-    }
-
-    // Jei kabučių nėra, paimame paskutinę dalį po dvitaškio
-    if (galaxy.includes(':')) {
-        return galaxy.split(':').pop();
-    }
-
-    return galaxy;
-}
-
-function escapeJs(text) {
-    if (!text) return "";
-    return text.replace(/'/g, "\\'").replace(/"/g, "&quot;");
-}
-
-document.addEventListener('DOMContentLoaded', loadData);

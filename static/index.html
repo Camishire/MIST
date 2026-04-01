@@ -26,6 +26,7 @@
             padding: 40px 0;
         }
 
+        /* Marquee foninis tekstas */
         body::before {
             content: "MISP MIST MISP MIST MISP MIST";
             position: fixed; top: 15%; left: -10%; font-size: 12rem; font-weight: 800;
@@ -36,46 +37,61 @@
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
         .page-wrapper {
-            max-width: 1300px; margin: 0 auto; padding: 0 20px;
-            display: grid; grid-template-columns: 1.2fr 0.8fr 1fr; gap: 30px;
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr 1fr;
+            gap: 30px;
         }
 
         .section-panel {
-            background: var(--panel-bg); backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 24px;
-            padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.03);
-            transition: all 0.4s; position: relative; overflow: visible !important;
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+            transition: all 0.4s;
+            position: relative;
+            overflow: visible !important; /* Kad dropdownai nebūtų nukirpti */
         }
 
         .section-title {
-            font-family: 'Space Mono', monospace; font-size: 0.7rem; text-transform: uppercase;
-            letter-spacing: 2px; color: var(--accent-purple); margin-bottom: 20px;
-            border-bottom: 1px solid rgba(118, 75, 162, 0.1); padding-bottom: 8px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent-purple);
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(118, 75, 162, 0.1);
+            padding-bottom: 8px;
         }
 
-        /* Grid zonų paskirstymas */
+        /* Sluoksniai (z-index) */
         .header-area { grid-column: 1 / -1; margin-bottom: 10px; }
-        .meta-area   { grid-column: 1 / 3; z-index: 5; }
-        .tags-area   { grid-column: 3 / 4; z-index: 10; }
-        .bulk-area   { grid-column: 1 / 3; z-index: 4; }
-        .galaxy-area { grid-column: 3 / 4; z-index: 9; }
+        .meta-area   { grid-column: 1 / 3; z-index: 15; } /* Aukščiausias metaduomenims */
+        .tags-area   { grid-column: 3 / 4; z-index: 20; } /* Aukščiausias dropdownams */
+        .bulk-area   { grid-column: 1 / 3; z-index: 5; }
+        .galaxy-area { grid-column: 3 / 4; z-index: 10; }
         .table-area  { grid-column: 1 / -1; z-index: 1; }
 
-        /* Dropdownai */
+        /* Dropdown & Hover stilius */
         .dropdown-menu {
-            z-index: 9999 !important; border: none; border-radius: 16px;
+            z-index: 9999 !important;
+            border: none;
+            border-radius: 16px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.15) !important;
-            background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px);
-            margin: 0;
+            background: rgba(255, 255, 255, 0.98);
         }
 
         .dropend:hover > .dropdown-menu {
-        display: block !important;
-        position: absolute;
-        left: 100%;
-        top: 0;
-        margin-top: -5px; /* Nedidelis susilygiavimas */
-    }
+            display: block !important;
+            position: absolute;
+            left: 100%;
+            top: 0;
+            margin-left: 5px;
+        }
 
         /* Tooltip stilius */
         .tooltip-inner {
@@ -83,27 +99,60 @@
             border-radius: 10px;
             padding: 8px 12px;
             font-size: 0.75rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
-        .bs-tooltip-end .tooltip-arrow::before { border-right-color: var(--accent-purple) !important; }
 
-        /* Badges */
+        /* Ženkliukai */
         .badge-container {
-            min-height: 80px; background: rgba(241, 238, 255, 0.4);
-            border: 2px dashed #dcd6f7; border-radius: 18px;
-            display: flex; flex-wrap: wrap; gap: 8px; padding: 15px;
+            min-height: 80px;
+            background: rgba(241, 238, 255, 0.4);
+            border: 2px dashed #dcd6f7;
+            border-radius: 18px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 15px;
         }
 
         .misp-badge {
-            background: white; border: 1px solid #dcd6f7; padding: 6px 14px;
-            border-radius: 50px; font-size: 0.8rem; display: flex; align-items: center;
+            background: white;
+            border: 1px solid #dcd6f7;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
         }
 
-        .misp-badge .remove { margin-left: 10px; cursor: pointer; color: #ff8a8a; }
+        .misp-badge .remove {
+            margin-left: 10px;
+            cursor: pointer;
+            color: #ff8a8a;
+            font-weight: bold;
+        }
 
         .btn-create {
-            background: var(--primary-gradient); color: white; border: none;
-            padding: 18px 60px; border-radius: 50px; font-weight: 800;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 18px 60px;
+            border-radius: 50px;
+            font-weight: 800;
+            box-shadow: 0 10px 25px rgba(161, 140, 209, 0.4);
+            transition: 0.3s;
+        }
+
+        .btn-create:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(161, 140, 209, 0.5);
+            color: white;
+        }
+
+        .form-control, .form-select {
+            border-radius: 12px;
+            border: 2px solid #f1eeff;
+            padding: 12px;
+            transition: all 0.3s;
         }
     </style>
 </head>
@@ -115,29 +164,31 @@
             <h1 class="fw-800 m-0" style="letter-spacing: -2px; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">MIST.creator</h1>
             <p class="text-muted m-0">Advanced MISP Event Generation Tool</p>
         </div>
-        <div class="text-end small text-muted">V2.2 / 2026</div>
+        <div class="text-end small text-muted">V2.3 / 2026</div>
     </div>
 
     <div class="section-panel meta-area">
         <div class="section-title">01 / Event Metadata</div>
         <div class="row g-3">
             <div class="col-md-4">
+                <label class="small fw-600 mb-1 opacity-50">DATE</label>
+                <input type="date" class="form-control" id="eventDate">
+            </div>
+            <div class="col-md-4">
                 <label class="small fw-600 mb-1 opacity-50">DISTRIBUTION</label>
                 <div id="distributionDropdownRoot"></div>
             </div>
-
             <div class="col-md-4">
                 <label class="small fw-600 mb-1 opacity-50">THREAT LEVEL</label>
                 <div id="threatLevelDropdownRoot"></div>
             </div>
-
-            <div class="col-md-4">
-                <label class="small fw-600 mb-1 opacity-50">ANALYSIS</label>
+            <div class="col-md-6">
+                <label class="small fw-600 mb-1 opacity-50">ANALYSIS STATUS</label>
                 <div id="analysisDropdownRoot"></div>
             </div>
-            <div class="col-12">
+            <div class="col-md-6">
                 <label class="small fw-600 mb-1 opacity-50">EVENT INFO / DESCRIPTION</label>
-                <input type="text" class="form-control" placeholder="Aprašymas...">
+                <input type="text" class="form-control" placeholder="Trumpas aprašymas...">
             </div>
         </div>
     </div>
@@ -146,20 +197,24 @@
         <div class="section-title">02 / Tags</div>
         <div id="tagsDropdownRoot"></div>
         <div id="selectedTags" class="badge-container mt-3">
-            <small class="text-muted w-100 text-center">Nieko nepasirinkta</small>
+            <small class="text-muted w-100 text-center">Pasirinkite žymes iš sąrašo</small>
         </div>
     </div>
 
     <div class="section-panel bulk-area">
         <div class="section-title">03 / Bulk IP Upload</div>
-        <textarea class="form-control" rows="4" placeholder="IP adresai..."></textarea>
+        <textarea class="form-control" rows="5" placeholder="Surašykite IP adresus po vieną eilutėje..."></textarea>
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <small class="text-muted italic">Automatinis Network Activity priskyrimas</small>
+            <button class="btn btn-dark btn-sm px-4" style="border-radius: 10px;">🚀 Import to Table</button>
+        </div>
     </div>
 
     <div class="section-panel galaxy-area">
         <div class="section-title">04 / Galaxies</div>
         <div id="galaxyDropdownRoot"></div>
         <div id="selectedGalaxies" class="badge-container mt-3">
-            <small class="text-muted w-100 text-center">Nieko nepasirinkta</small>
+            <small class="text-muted w-100 text-center">Pasirinkite galaktikas</small>
         </div>
     </div>
 
@@ -167,8 +222,19 @@
         <div class="section-title">05 / Event Attributes</div>
         <div class="table-responsive">
             <table class="table align-middle m-0">
-                <thead><tr><th>Category</th><th>Type</th><th>Value</th><th class="text-end">Action</th></tr></thead>
-                <tbody id="attrTableBody"><tr><td colspan="4" class="text-center py-5 text-muted small">Lentelė tuščia.</td></tr></tbody>
+                <thead>
+                    <tr>
+                        <th class="small">Category</th>
+                        <th class="small">Type</th>
+                        <th class="small">Value</th>
+                        <th class="small text-end">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="attrTableBody">
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-muted small">Lentelė tuščia. Pridėkite atributų.</td>
+                    </tr>
+                </tbody>
             </table>
         </div>
     </div>
@@ -179,6 +245,10 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/static/script.js"></script> 
+<script src="/static/script.js"></script> <script>
+    // Automatiškai nustatome šiandienos datą
+    document.getElementById('eventDate').valueAsDate = new Date();
+</script>
+
 </body>
 </html>
