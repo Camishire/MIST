@@ -2,6 +2,9 @@
 // BULK UPLOAD - Complete Handler with EDITABLE ROWS
 // ============================================
 
+// API Key from environment (in production, get from secure storage)
+const API_KEY = 'mist-secret-key-2026';
+
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🔍 BulkGrabber.js loaded!');
     
@@ -31,9 +34,17 @@ async function handleBulkUpload() {
     try {
         const response = await fetch('/api/bulk-upload', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-API-Key': API_KEY
+            },
             body: JSON.stringify({ ips: lines })
         });
+        
+        if (response.status === 403) {
+            alert('❌ Authentication failed: Invalid API Key');
+            return;
+        }
         
         const data = await response.json();
         console.log('📦 Response data:', data);
@@ -137,6 +148,14 @@ async function createEditableRow(attr, categories) {
                value="${escapeHtml(attr.value)}">
     `;
     tr.appendChild(tdValue);
+
+    const tdComment = document.createElement('td');
+    tdComment.innerHTML = `
+        <input type="text" class="form-control form-control-sm" 
+            style="border-radius: 8px; font-size: 0.85rem;"
+            placeholder="Optional comment...">
+    `;
+    tr.appendChild(tdComment);
     
     // Action (delete button)
     const tdAction = document.createElement('td');

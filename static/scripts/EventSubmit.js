@@ -2,6 +2,9 @@
 // EVENT SUBMISSION HANDLER
 // ============================================
 
+// API Key from environment
+const API_KEY = 'mist-secret-key-2026';
+
 document.addEventListener('DOMContentLoaded', function() {
     const submitBtn = document.getElementById('submitBtn');
     
@@ -30,9 +33,19 @@ async function handleEventSubmit() {
     try {
         const response = await fetch('/events/create', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-API-Key': API_KEY
+            },
             body: JSON.stringify(eventData)
         });
+        
+        if (response.status === 403) {
+            alert('❌ Authentication failed: Invalid API Key');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+            return;
+        }
         
         const result = await response.json();
         
@@ -67,7 +80,7 @@ function collectFormData() {
     const distribution = parseInt(document.getElementById('distributionSelect').value);
     const threatLevel = parseInt(document.getElementById('threatLevelSelect').value);
     const analysis = parseInt(document.getElementById('analysisSelect').value);
-    const eventInfo = document.querySelector('.meta-area input[placeholder="Trumpas aprašymas..."]').value;
+    const eventInfo = document.getElementById('eventInfo').value;
     
     // Tags and galaxies from BadgeManager
     const tags = selectedTags || [];
@@ -107,13 +120,14 @@ function collectTableAttributes() {
         const categorySelect = row.querySelector('td:nth-child(2) select');
         const typeSelect = row.querySelector('td:nth-child(3) select');
         const valueInput = row.querySelector('td:nth-child(4) input');
-        
+        const commentInput = row.querySelector('td:nth-child(5) input');
+
         if (categorySelect && typeSelect && valueInput && valueInput.value.trim()) {
             attributes.push({
                 category: categorySelect.value,
                 type: typeSelect.value,
                 value: valueInput.value.trim(),
-                comment: '',
+                comment: commentInput ? commentInput.value.trim() : '',
                 to_ids: false
             });
         }
@@ -175,7 +189,7 @@ function resetForm() {
     document.getElementById('analysisSelect').selectedIndex = 0;
     
     // Reset event info
-    document.querySelector('.meta-area input[placeholder="Trumpas aprašymas..."]').value = '';
+    document.getElementById('eventInfo').value = '';
     
     // Clear badges
     selectedTags = [];
