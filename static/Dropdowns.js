@@ -9,26 +9,17 @@ function renderSimpleDropdown(containerId, options, typeLabel, selectedId) {
         return;
     }
 
-    console.log('Options received:', options);
-    console.log('Options type:', typeof options);
-    console.log('Options entries:', Object.entries(options));
-
     let html = `
         <select class="form-select shadow-sm" id="${selectedId}" style="border-radius: 12px;">
             <option value="" selected disabled>Pasirinkti ${typeLabel}...</option>`;
     
-    // FORCE convert to entries
     const entries = Object.entries(options);
-    console.log('Entries:', entries);
     
     entries.forEach(([value, label]) => {
-        console.log(`Adding option: ${value} = ${label}`);
         html += `<option value="${value}">${label}</option>`;
     });
     
     html += `</select>`;
-    
-    console.log('Final HTML:', html);
     container.innerHTML = html;
 }
 
@@ -66,15 +57,12 @@ function renderNestedDropdown(containerId, data, typeLabel, targetListId) {
                 <ul class="dropdown-menu shadow-lg border-0">`;
         
         items.forEach(rawItem => {
-            // Parse Python tuple: ('value', 'description')
             let value, description;
             
             if (Array.isArray(rawItem)) {
-                // JavaScript array: ['value', 'description']
                 value = rawItem[0];
                 description = rawItem[1] || '';
             } else {
-                // Just string
                 value = rawItem;
                 description = '';
             }
@@ -102,7 +90,10 @@ function renderNestedDropdown(containerId, data, typeLabel, targetListId) {
     }, 100);
 }
 
-// Helper funkcijos
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+
 function formatTagName(tag) {
     if (tag.includes('=')) {
         const match = tag.match(/"(.+?)"/);
@@ -133,37 +124,4 @@ function escapeHtml(text) {
     return text.replace(/[&<>"']/g, m => map[m]);
 }
 
-function renderSelectedItems(listId, items) {
-    const list = document.getElementById(listId);
-    if (!list) return;
-    list.innerHTML = '';
-    items.forEach(value => {
-        const newItem = document.createElement('li');
-        newItem.className = 'list-group-item d-flex justify-content-between align-items-center';
-        newItem.dataset.value = value;
-        newItem.innerHTML = `
-            ${value}
-            <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();">X</button>
-        `;
-        list.appendChild(newItem);
-    });
-}
-
-function addItem(value, targetListId) {
-    const list = document.getElementById(targetListId);
-    if (!list) return;
-    // Check for duplicates
-    if ([...list.children].some(li => li.dataset.value === value)) {
-        alert('Šis elementas jau pridėtas!');
-        return;
-    }
-    const newItem = document.createElement('li');
-    newItem.className = 'list-group-item d-flex justify-content-between align-items-center';
-    newItem.dataset.value = value;
-    newItem.innerHTML = `
-        ${value}
-        <button class="btn btn-sm btn-danger" onclick="this.parentElement.remove();">X</button>
-    `;
-    list.appendChild(newItem);
-    renderSelectedItems(targetListId, [...list.children].map(li => li.dataset.value));
-}
+console.log('✅ Dropdowns.js loaded!');

@@ -1,7 +1,10 @@
+// ============================================
+// API GETTER - All GET requests
+// ============================================
+
 async function getDistributionOptions() {
     try {
         const response = await fetch('/api/distribution');
-        console.log('IM HEREE');
         const data = await response.json();
         return data.options || {};
     } catch (error) {
@@ -51,3 +54,25 @@ async function getGalaxiesCategories() {
         return {};
     }
 }
+
+async function getAllCategories() {
+    try {
+        const response = await fetch('/api/categories');
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching categories:', error);
+        return { categories: [] };
+    }
+}
+
+async function getTypesForCategory(category) {
+    try {
+        const response = await fetch(`/api/categories/${encodeURIComponent(category)}/types`);
+        return await response.json();
+    } catch (error) {
+        console.error(`Error fetching types for category ${category}:`, error);
+        return { types: [] };
+    }
+}
+
+console.log('✅ APIgetter.js loaded!');

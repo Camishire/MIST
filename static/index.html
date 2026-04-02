@@ -234,7 +234,7 @@
             </div>
             <div class="col-md-6">
                 <label class="small fw-600 mb-1 opacity-50">EVENT INFO / DESCRIPTION</label>
-                <input type="text" class="form-control" placeholder="Trumpas aprašymas...">
+                <input type="text" class="form-control" id="eventInfo" placeholder="Trumpas aprašymas...">
             </div>
         </div>
     </div>
@@ -249,10 +249,9 @@
 
     <div class="section-panel bulk-area">
         <div class="section-title">03 / Bulk IP Upload</div>
-        <textarea class="form-control" rows="5" placeholder="Surašykite IP adresus po vieną eilutėje..."></textarea>
+        <textarea class="form-control" id="bulkGrabberTextarea" rows="5" placeholder="Surašykite IP adresus po vieną eilutėje..."></textarea>
         <div class="d-flex justify-content-between align-items-center mt-3">
-            <small class="text-muted italic">Automatinis Network Activity priskyrimas</small>
-            <button class="btn btn-dark btn-sm px-4" style="border-radius: 10px;">🚀 Import to Table</button>
+            <button class="btn btn-dark btn-sm px-4" style="border-radius: 10px;" id="BulkUploadbtn">🚀 Import to Table</button>
         </div>
     </div>
 
@@ -267,18 +266,21 @@
     <div class="section-panel table-area">
         <div class="section-title">05 / Event Attributes</div>
         <div class="table-responsive">
-            <table class="table align-middle m-0">
+            <table class="table align-middle m-0" id="ObjectsTable">
                 <thead>
                     <tr>
-                        <th class="small">Category</th>
-                        <th class="small">Type</th>
-                        <th class="small">Value</th>
-                        <th class="small text-end">Action</th>
+                        <th class="small" id="DateColumn">Date</th>
+                        <th class="small" id="CategoryColumn">Category</th>
+                        <th class="small" id="TypeColumn">Type</th>
+                        <th class="small" id="ValueColumn">Value</th>
+                        <th class="small text-end" id="ActionColumn">Action</th>
+                        <!-- how do I make it so that for each individual row there is a dropdown on date, category and type? the value needs to be an editable input field. -->
+                        
                     </tr>
                 </thead>
                 <tbody id="attrTableBody">
                     <tr>
-                        <td colspan="4" class="text-center py-5 text-muted small">Lentelė tuščia. Pridėkite atributų.</td>
+                        <td colspan="5" class="text-center py-5 text-muted small">Lentelė tuščia. Pridėkite atributų.</td>
                     </tr>
                 </tbody>
             </table>
@@ -293,10 +295,14 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- Mūsų failai TVARKOJE: -->
-<script src="/static/APIgetter.js"></script>      <!-- 1. API calls -->
-<script src="/static/Dropdowns.js"></script>      <!-- 2. Rendering -->
-<script src="/static/BadgeManager.js"></script>  <!-- Naujas! -->
-<script src="/static/setup.js"></script>          <!-- 3. Initialization -->
+<script src="/static/APIgetter.js?v=99"></script>
+<script src="/static/APIposter.js?v=99"></script>
+<script src="/static/Dropdowns.js?v=99"></script>
+<script src="/static/BadgeManager.js?v=99"></script>
+<script src="/static/BulkGrabber.js?v=99"></script>
+<script src="/static/EventSubmit.js?v=100"></script>
+<script src="/static/setup.js?v=99"></script>
+
 
 <!-- Set default date -->
 <script>

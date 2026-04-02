@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 // DISTRIBUTION DROPDOWN
 // ============================================
 async function setupDistributionDropdown() {
-    console.log('Setting up Distribution dropdown...');
     const options = await getDistributionOptions();
     renderSimpleDropdown('distributionDropdownRoot', options, 'Distribution', 'distributionSelect');
 }
