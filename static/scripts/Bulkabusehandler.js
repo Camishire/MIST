@@ -14,7 +14,7 @@ if (bulkAbuseBtn) {
 }
 
 async function handleBulkAbuseEnrichment() {
-    console.log('🚀 Bulk AbuseIPDB enrichment started');
+    console.log('🚀 Bulk enrichment started (AbuseIPDB + OpenCTI)');
     
     const tbody = document.getElementById('attrTableBody');
     const rows = tbody.querySelectorAll('tr');
@@ -56,45 +56,30 @@ async function handleBulkAbuseEnrichment() {
     bulkBtn.innerHTML = `⏳ (${ips.length})`;
     
     try {
-        console.log(`📡 Fetching AbuseIPDB data for ${ips.length} IPs...`);
-        const results = await getAbuseIPDBBulkData(ips);
+        console.log(`📡 Fetching enrichment data for ${ips.length} IPs...`);
+        const results = await getEnrichedDataForIndicators(ips);
         
-        // results is an array of objects, each with ipAddress and data
-        const resultMap = {};
-        results.forEach(result => {
-            resultMap[result.ipAddress] = result;
-        });
+        console.log('🔍 DEBUG: results type:', typeof results);
+        console.log('🔍 DEBUG: Array.isArray(results):', Array.isArray(results));
+        console.log('🔍 DEBUG: results:', results);
         
-        // Update each row with the result
-        let successCount = 0;
-        ipRows.forEach(row => {
-            const valueInput = row.querySelector('td:nth-child(4) input');
-            const commentTextarea = row.querySelector('td:nth-child(5) textarea');
+        // Check if results is actually an array
+        if (!Array.isArray(results)) {
+            console.error('❌ Results is not an array! Converting...');
+            // Maybe it's wrapped in a property?
+            const resultsArray = results.results || results.data || results;
+            console.log('🔍 Trying to extract array:', resultsArray);
             
-            if (valueInput && commentTextarea) {
-                const ip = valueInput.value.trim();
-                const result = resultMap[ip];
-                
-                if (result) {
-                    if (result.error) {
-                        commentTextarea.value = `AbuseIPDB error: ${result.error}`;
-                    } else {
-                        const score = result.abuseConfidenceScore || 0;
-                        const reports = result.totalReports || 0;
-                        const country = result.countryCode || 'N/A';
-                        
-                        commentTextarea.value = `Abuse: ${score}%, Reports: ${reports}, Country: ${country}`;
-                        successCount++;
-                    }
-                    
-                    // Trigger auto-resize
-                    commentTextarea.style.height = 'auto';
-                    commentTextarea.style.height = commentTextarea.scrollHeight + 'px';
-                }
+            // If still not array, just show error
+            if (!Array.isArray(resultsArray)) {
+                throw new Error('Backend did not return an array');
             }
-        });
-        
-        alert(`✅ Enriched ${successCount} out of ${ips.length} IP attributes!`);
+            
+            // Use the extracted array
+            processResults(resultsArray, ipRows);
+        } else {
+            processResults(results, ipRows);
+        }
         
     } catch (error) {
         console.error('❌ Bulk enrichment error:', error);
@@ -104,6 +89,43 @@ async function handleBulkAbuseEnrichment() {
         bulkBtn.disabled = false;
         bulkBtn.innerHTML = originalHTML;
     }
+}
+
+function processResults(results, ipRows) {
+    // results is an array of combined enrichment objects
+    const resultMap = {};
+    results.forEach(result => {
+        resultMap[result.ipAddress] = result;
+    });
+    
+    // Update each row with the result
+    let successCount = 0;
+    ipRows.forEach(row => {
+        const valueInput = row.querySelector('td:nth-child(4) input');
+        const commentTextarea = row.querySelector('td:nth-child(5) textarea');
+        
+        if (valueInput && commentTextarea) {
+            const ip = valueInput.value.trim();
+            const result = resultMap[ip];
+            
+            if (result) {
+                if (result.formatted_comment) {
+                    commentTextarea.value = result.formatted_comment;
+                    successCount++;
+                } else if (result.error) {
+                    commentTextarea.value = `Error: ${result.error}`;
+                } else {
+                    commentTextarea.value = 'No threat data found';
+                }
+                
+                // Trigger auto-resize
+                commentTextarea.style.height = 'auto';
+                commentTextarea.style.height = commentTextarea.scrollHeight + 'px';
+            }
+        }
+    });
+    
+    alert(`✅ Enriched ${successCount} out of ${ipRows.length} IP attributes with AbuseIPDB + OpenCTI data!`);
 }
 
 console.log('✅ Bulk AbuseIPDB handler loaded!');

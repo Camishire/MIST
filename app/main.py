@@ -1,3 +1,4 @@
+from typing import List
 from fastapi.responses import FileResponse
 from fastapi import FastAPI, HTTPException, Security, Depends
 from fastapi.security import APIKeyHeader
@@ -6,6 +7,7 @@ from pydantic import BaseModel
 from app.models import CreateEventRequest, CreateEventFullRequest
 from app.services.abuseipdb import check_ip_abuse, check_ip_abuse_bulk
 from app.services.misp import create_misp_event, create_misp_event_simple
+from app.services.opencti import check_ip_in_opencti, format_opencti_result_for_comment
 from app.constants import (
     get_all_tags, get_all_galaxies, get_all_categories, get_types_for_category,
     DISTRIBUTION_OPTIONS, THREAT_LEVEL_OPTIONS, ANALYSIS_OPTIONS
@@ -195,3 +197,83 @@ def check_abuseipdb_bulk(ips: str):
 def check_abuseipdb(ip_address:str):
     return check_ip_abuse(ip_address)
 
+@app.get("/api/check-opencti/{ip_address}")
+def check_opencti(ip_address: str):
+    """Check single IP in OpenCTI threat intelligence platform"""
+    result = check_ip_in_opencti(ip_address)
+    
+    # Add formatted comment for easy consumption
+    result["formatted_comment"] = format_opencti_result_for_comment(result)
+    
+    return result
+ 
+@app.get("/api/check-opencti/bulk")
+def check_opencti_bulk(ips: str):
+    """Check multiple IPs in OpenCTI"""
+    ip_list = ips.split(",")
+    results = []
+    
+    for ip in ip_list:
+        result = check_ip_in_opencti(ip.strip())
+        result["formatted_comment"] = format_opencti_result_for_comment(result)
+        results.append(result)
+    
+    return results
+ 
+# ============================================
+# ENRICHMENT ENDPOINTS (Public)
+# ============================================
+
+@app.get("/api/enrich/bulk")
+def enrich_ips_bulk(ips: str) -> List[dict]:
+    """Enrich multiple IPs with data from all sources"""
+    ip_list = [ip.strip() for ip in ips.split(",") if ip.strip()]
+    results = []
+    
+    for ip in ip_list:
+        result = enrich_ip_all_sources(ip)
+        results.append(result)
+    
+    return results
+
+@app.get("/api/enrich/{ip_address}")
+def enrich_ip_all_sources(ip_address: str):
+    """
+    Enrich IP with data from all available sources (AbuseIPDB + OpenCTI)
+    Returns combined intel
+    """
+    abuse_data = check_ip_abuse(ip_address)
+    opencti_data = check_ip_in_opencti(ip_address)
+    
+    # Build formatted comment with sections
+    sections = []
+    
+    # AbuseIPDB section
+    if not abuse_data.get("error"):
+        abuse_score = abuse_data.get("abuseConfidenceScore", 0)
+        abuse_reports = abuse_data.get("totalReports", 0)
+        country = abuse_data.get("countryCode", 'N/A')
+        
+        if abuse_score > 0 or abuse_reports > 0:
+            abuse_lines = [
+                "AbuseIPDB:",
+                f"  • Confidence: {abuse_score}%",
+                f"  • Reports: {abuse_reports}",
+                f"  • Country: {country}"
+            ]
+            sections.append("\n".join(abuse_lines))
+    
+    # OpenCTI section
+    if opencti_data.get("found"):
+        opencti_comment = format_opencti_result_for_comment(opencti_data)
+        sections.append(opencti_comment)
+    
+    formatted_comment = "\n\n".join(sections) if sections else "No threat intel found"
+    
+    # Return structure matching what frontend expects
+    return {
+        "ipAddress": ip_address,
+        "abuseipdb": abuse_data,
+        "opencti": opencti_data,
+        "formatted_comment": formatted_comment
+    }
