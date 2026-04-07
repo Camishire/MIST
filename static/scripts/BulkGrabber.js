@@ -144,17 +144,29 @@ async function createEditableRow(attr, categories) {
     `;
     tr.appendChild(tdValue);
 
-    // Comment field with auto-resize textarea
+    // Comment field with auto-resize textarea and enrichment button
     const tdComment = document.createElement('td');
     tdComment.innerHTML = `
         <div style="display: flex; align-items: start; gap: 4px;">
             <textarea class="form-control form-control-sm auto-resize-textarea" 
-                style="border-radius: 8px; font-size: 0.85rem; resize: none; overflow: hidden; min-height: 31px; line-height: 1.4;"
-                placeholder="Optional comment..."
+                style="border-radius: 8px; 
+                       font-size: 0.85rem; 
+                       resize: none; 
+                       overflow: hidden; 
+                       min-height: 31px; 
+                       line-height: 1.6;
+                       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+                       color: #2c3e50;
+                       background-color: #f8f9fa;
+                       border: 1px solid #dee2e6;
+                       padding: 6px 10px;
+                       white-space: pre-wrap;
+                       word-break: break-word;"
+                placeholder="Click ⭐ to enrich..."
                 rows="1"></textarea>
-            <button class="btn btn-sm btn-outline-secondary abuse-check-btn"
+            <button class="btn btn-sm btn-outline-warning enrich-all-btn"
                 style="border-radius: 8px; font-size: 0.85rem; flex-shrink: 0; height: 31px;"
-                title="AbuseIPDB enrichment">
+                title="Enrich from AbuseIPDB + OpenCTI">
                 ⭐
             </button>
         </div>
@@ -168,9 +180,9 @@ async function createEditableRow(attr, categories) {
         this.style.height = this.scrollHeight + 'px';
     });
 
-    // AbuseIPDB button handler
-    const abuseCheckBtn = tdComment.querySelector('.abuse-check-btn');
-    abuseCheckBtn.addEventListener('click', async function() {
+    // ⭐ Enrich ALL button handler (AbuseIPDB + OpenCTI)
+    const enrichAllBtn = tdComment.querySelector('.enrich-all-btn');
+    enrichAllBtn.addEventListener('click', async function() {
         const ip = tdValue.querySelector('input').value.trim();
         if (!ip) {
             alert('Please enter an IP address to check!');
@@ -178,36 +190,62 @@ async function createEditableRow(attr, categories) {
         }
         
         // Show loading state
-        const originalHTML = abuseCheckBtn.innerHTML;
-        abuseCheckBtn.disabled = true;
-        abuseCheckBtn.innerHTML = '⏳';
+        const originalHTML = enrichAllBtn.innerHTML;
+        enrichAllBtn.disabled = true;
+        enrichAllBtn.innerHTML = '⏳';
         
         try {
-            const result = await getAbuseIPDBData(ip);
+            // Call combined enrichment endpoint
+            const result = await getEnrichedDataForIndicator(ip);
             
-            if (result.error) {
-                commentTextarea.value = `AbuseIPDB error: ${result.error}`;
+            if (result.formatted_comment) {
+                commentTextarea.value = result.formatted_comment;
+            } else if (result.error) {
+                commentTextarea.value = `Enrichment error: ${result.error}`;
             } else {
-                const score = result.abuseConfidenceScore || 0;
-                const reports = result.totalReports || 0;
-                const country = result.countryCode || 'N/A';
+                // Fallback - build from parts
+                const parts = [];
                 
-                commentTextarea.value = `Abuse: ${score}%, Reports: ${reports}, Country: ${country}`;
+                // AbuseIPDB part
+                if (result.abuseipdb && !result.abuseipdb.error) {
+                    const score = result.abuseipdb.abuseConfidenceScore || 0;
+                    const reports = result.abuseipdb.totalReports || 0;
+                    if (score > 0 || reports > 0) {
+                        parts.push(`AbuseIPDB: ${score}% (${reports} reports)`);
+                    }
+                }
+                
+                // OpenCTI part
+                if (result.opencti && result.opencti.found) {
+                    const octParts = [];
+                    if (result.opencti.score > 0) octParts.push(`Score: ${result.opencti.score}`);
+                    if (result.opencti.threat_type && result.opencti.threat_type !== "Unknown / Other") {
+                        octParts.push(`Threat: ${result.opencti.threat_type}`);
+                    }
+                    if (result.opencti.total_sightings > 0) {
+                        octParts.push(`Sightings: ${result.opencti.total_sightings}`);
+                    }
+                    if (octParts.length > 0) {
+                        parts.push(`OpenCTI: ${octParts.join(' | ')}`);
+                    }
+                }
+                
+                commentTextarea.value = parts.length > 0 ? parts.join(' | ') : 'No threat data found';
             }
             
-            // Trigger auto-resize after setting value
+            // Trigger auto-resize
             commentTextarea.style.height = 'auto';
             commentTextarea.style.height = commentTextarea.scrollHeight + 'px';
             
         } catch (error) {
-            console.error('Error checking AbuseIPDB:', error);
+            console.error('Error enriching IP:', error);
             commentTextarea.value = `Failed: ${error.message}`;
             commentTextarea.style.height = 'auto';
             commentTextarea.style.height = commentTextarea.scrollHeight + 'px';
         } finally {
             // Restore button
-            abuseCheckBtn.disabled = false;
-            abuseCheckBtn.innerHTML = originalHTML;
+            enrichAllBtn.disabled = false;
+            enrichAllBtn.innerHTML = originalHTML;
         }
     });
     

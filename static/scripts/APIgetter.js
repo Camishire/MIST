@@ -109,4 +109,38 @@ async function getAbuseIPDBBulkData(ips) {
     }
 }
 
+async function getEnrichedDataForIndicator(indicator) {
+    try {
+        const response = await fetch(`/api/enrich/${encodeURIComponent(indicator)}`);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Enriched data:', data);
+        return data;
+    } catch (error) {
+        console.error(`Error fetching enriched data for ${indicator}:`, error);
+        throw error;
+    }
+}
+
+async function getEnrichedDataForIndicators(indicators) {
+    try {
+        const response = await fetch(`/api/enrich/bulk?ips=${encodeURIComponent(indicators.join(","))}`);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Bulk enriched data:', data);
+        return data;
+    } catch (error) {
+        console.error(`Error fetching enriched data for indicators:`, error);
+        throw error;
+    }
+}
+
 console.log('✅ APIgetter.js loaded!');

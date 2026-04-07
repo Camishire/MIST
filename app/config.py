@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     api_key_name: str = "X-API-Key"
     api_key_value: str = "mist-secret-key-2026"
     abuseipdb_api_key: Optional[str] = None
+    opencti_url: str
+    opencti_api_key: str
 
     
     class Config:
