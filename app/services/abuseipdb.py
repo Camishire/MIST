@@ -16,31 +16,34 @@ def check_ip_abuse(ip_address):
         response = requests.get(url, headers=headers, params=params)
         response.raise_for_status()
         data = response.json()
-        AbuseConfidenceScore = data.get('data', {}).get('abuseConfidenceScore', 0)
-        CountryCode = data.get('data', {}).get('countryCode', 'N/A')
-        Domain = data.get('data', {}).get('domain', 'N/A')
-        response = {
+        
+        # Extract data from AbuseIPDB response
+        abuse_data = data.get('data', {})
+        
+        return {
             "ipAddress": ip_address,
-            "abuseConfidenceScore": AbuseConfidenceScore,
-            "countryCode": CountryCode,
-            "domain": Domain
+            "abuseConfidenceScore": abuse_data.get('abuseConfidenceScore', 0),
+            "countryCode": abuse_data.get('countryCode', 'N/A'),
+            "domain": abuse_data.get('domain', 'N/A'),
+            "totalReports": abuse_data.get('totalReports', 0),
+            "isWhitelisted": abuse_data.get('isWhitelisted', False),
+            "usageType": abuse_data.get('usageType', 'N/A')
         }
-        return response
     except requests.RequestException as e:
-        raise Exception(f"Error checking IP abuse: {str(e)}")
+        # Return error info instead of raising exception
+        return {
+            "ipAddress": ip_address,
+            "error": str(e),
+            "abuseConfidenceScore": 0,
+            "totalReports": 0
+        }
     
 
 def check_ip_abuse_bulk(ip_addresses):
     print(ip_addresses)
     results = []
     for ip in ip_addresses:
-        try:
-            result = check_ip_abuse(ip)
-            print(result)
-            results.append(result)
-        except Exception as e:
-            results.append({
-                "ipAddress": ip,
-                "error": str(e)
-            })
+        result = check_ip_abuse(ip)
+        print(result)
+        results.append(result)
     return results
