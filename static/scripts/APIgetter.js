@@ -75,4 +75,38 @@ async function getTypesForCategory(category) {
     }
 }
 
+async function getAbuseIPDBData(ip) {
+    try {
+        const response = await fetch(`/api/check-abuseipdb/${encodeURIComponent(ip)}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('AbuseIPDB data:', data);
+        return data;
+    } catch (error) {
+        console.error(`Error fetching AbuseIPDB data for ${ip}:`, error);
+        throw error;
+    }
+}
+
+async function getAbuseIPDBBulkData(ips) {
+    try {
+        const response = await fetch(`/api/check-abuseipdb/bulk?ips=${encodeURIComponent(ips.join(","))}`);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('AbuseIPDB bulk data:', data);
+        return data;
+    } catch (error) {
+        console.error(`Error fetching AbuseIPDB bulk data:`, error);
+        throw error;
+    }
+}
+
 console.log('✅ APIgetter.js loaded!');

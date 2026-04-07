@@ -2,21 +2,16 @@
 // BULK UPLOAD - Complete Handler with EDITABLE ROWS
 // ============================================
 
-// API Key from environment (in production, get from secure storage)
-const API_KEY = 'mist-secret-key-2026';
+console.log('🔍 BulkGrabber.js loaded!');
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔍 BulkGrabber.js loaded!');
-    
-    const bulkBtn = document.getElementById('BulkUploadbtn');
-    
-    if (bulkBtn) {
-        console.log('✅ Attaching click handler to button');
-        bulkBtn.addEventListener('click', handleBulkUpload);
-    } else {
-        console.error('❌ Button not found!');
-    }
-});
+const bulkBtn = document.getElementById('BulkUploadbtn');
+
+if (bulkBtn) {
+    console.log('✅ Attaching click handler to BulkUploadbtn');
+    bulkBtn.addEventListener('click', handleBulkUpload);
+} else {
+    console.error('❌ BulkUploadbtn not found!');
+}
 
 async function handleBulkUpload() {
     console.log('🚀 handleBulkUpload called!');
@@ -36,7 +31,7 @@ async function handleBulkUpload() {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'X-API-Key': API_KEY
+                'X-API-Key': MIST_CONFIG.API_KEY
             },
             body: JSON.stringify({ ips: lines })
         });
@@ -149,13 +144,72 @@ async function createEditableRow(attr, categories) {
     `;
     tr.appendChild(tdValue);
 
+    // Comment field with auto-resize textarea
     const tdComment = document.createElement('td');
     tdComment.innerHTML = `
-        <input type="text" class="form-control form-control-sm" 
-            style="border-radius: 8px; font-size: 0.85rem;"
-            placeholder="Optional comment...">
+        <div style="display: flex; align-items: start; gap: 4px;">
+            <textarea class="form-control form-control-sm auto-resize-textarea" 
+                style="border-radius: 8px; font-size: 0.85rem; resize: none; overflow: hidden; min-height: 31px; line-height: 1.4;"
+                placeholder="Optional comment..."
+                rows="1"></textarea>
+            <button class="btn btn-sm btn-outline-secondary abuse-check-btn"
+                style="border-radius: 8px; font-size: 0.85rem; flex-shrink: 0; height: 31px;"
+                title="AbuseIPDB enrichment">
+                ⭐
+            </button>
+        </div>
     `;
     tr.appendChild(tdComment);
+
+    // Auto-resize functionality
+    const commentTextarea = tdComment.querySelector('.auto-resize-textarea');
+    commentTextarea.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = this.scrollHeight + 'px';
+    });
+
+    // AbuseIPDB button handler
+    const abuseCheckBtn = tdComment.querySelector('.abuse-check-btn');
+    abuseCheckBtn.addEventListener('click', async function() {
+        const ip = tdValue.querySelector('input').value.trim();
+        if (!ip) {
+            alert('Please enter an IP address to check!');
+            return;
+        }
+        
+        // Show loading state
+        const originalHTML = abuseCheckBtn.innerHTML;
+        abuseCheckBtn.disabled = true;
+        abuseCheckBtn.innerHTML = '⏳';
+        
+        try {
+            const result = await getAbuseIPDBData(ip);
+            
+            if (result.error) {
+                commentTextarea.value = `AbuseIPDB error: ${result.error}`;
+            } else {
+                const score = result.abuseConfidenceScore || 0;
+                const reports = result.totalReports || 0;
+                const country = result.countryCode || 'N/A';
+                
+                commentTextarea.value = `Abuse: ${score}%, Reports: ${reports}, Country: ${country}`;
+            }
+            
+            // Trigger auto-resize after setting value
+            commentTextarea.style.height = 'auto';
+            commentTextarea.style.height = commentTextarea.scrollHeight + 'px';
+            
+        } catch (error) {
+            console.error('Error checking AbuseIPDB:', error);
+            commentTextarea.value = `Failed: ${error.message}`;
+            commentTextarea.style.height = 'auto';
+            commentTextarea.style.height = commentTextarea.scrollHeight + 'px';
+        } finally {
+            // Restore button
+            abuseCheckBtn.disabled = false;
+            abuseCheckBtn.innerHTML = originalHTML;
+        }
+    });
     
     // Action (delete button)
     const tdAction = document.createElement('td');
@@ -170,6 +224,32 @@ async function createEditableRow(attr, categories) {
     tr.appendChild(tdAction);
     
     return tr;
+}
+
+async function GetAbuseIPDBBulkdata(ips) {
+    const abuseCheckBulkBtn = document.getElementById('AbuseIPDBBulk');
+    abuseCheckBulkBtn.addEventListener('click', async function() {
+        const ipList = ips.map(ip => ip.trim()).filter(ip => ip);
+        if (ipList.length === 0) {
+            alert('Please enter at least one IP address to check!');
+            return;
+        }
+
+        abuseCheckBulkBtn.disabled = true;
+        abuseCheckBulkBtn.innerHTML = '⏳'
+
+        try{
+            const result = await getAbuseIPDBBulkData(ipList);
+            console.log('Bulk AbuseIPDB data:', result);
+        } catch (error) {
+            console.error('Error checking Bulk AbuseIPDB:', error);
+        } finally {
+            abuseCheckBulkBtn.disabled = false;
+            abuseCheckBulkBtn.innerHTML = 'Check Bulk AbuseIPDB';
+
+        }
+        });
+
 }
 
 // ============================================

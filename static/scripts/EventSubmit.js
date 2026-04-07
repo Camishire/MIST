@@ -2,16 +2,17 @@
 // EVENT SUBMISSION HANDLER
 // ============================================
 
-// API Key from environment
-const API_KEY = 'mist-secret-key-2026';
+// API Key is defined in BulkGrabber.js (shared global)
 
-document.addEventListener('DOMContentLoaded', function() {
-    const submitBtn = document.getElementById('submitBtn');
-    
-    if (submitBtn) {
-        submitBtn.addEventListener('click', handleEventSubmit);
-    }
-});
+// Attach event listener immediately (scripts load after DOM)
+const submitBtn = document.getElementById('submitBtn');
+
+if (submitBtn) {
+    console.log('✅ Submit button found, attaching listener');
+    submitBtn.addEventListener('click', handleEventSubmit);
+} else {
+    console.error('❌ Submit button NOT found!');
+}
 
 async function handleEventSubmit() {
     console.log('🚀 Submitting MISP event...');
@@ -35,7 +36,7 @@ async function handleEventSubmit() {
             method: 'POST',
             headers: { 
                 'Content-Type': 'application/json',
-                'X-API-Key': API_KEY
+                'X-API-Key': MIST_CONFIG.API_KEY
             },
             body: JSON.stringify(eventData)
         });
@@ -120,14 +121,14 @@ function collectTableAttributes() {
         const categorySelect = row.querySelector('td:nth-child(2) select');
         const typeSelect = row.querySelector('td:nth-child(3) select');
         const valueInput = row.querySelector('td:nth-child(4) input');
-        const commentInput = row.querySelector('td:nth-child(5) input');
+        const commentTextarea = row.querySelector('td:nth-child(5) textarea');
 
         if (categorySelect && typeSelect && valueInput && valueInput.value.trim()) {
             attributes.push({
                 category: categorySelect.value,
                 type: typeSelect.value,
                 value: valueInput.value.trim(),
-                comment: commentInput ? commentInput.value.trim() : '',
+                comment: commentTextarea ? commentTextarea.value.trim() : '',
                 to_ids: false
             });
         }

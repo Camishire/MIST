@@ -4,6 +4,7 @@ from fastapi.security import APIKeyHeader
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from app.models import CreateEventRequest, CreateEventFullRequest
+from app.services.abuseipdb import check_ip_abuse, check_ip_abuse_bulk
 from app.services.misp import create_misp_event, create_misp_event_simple
 from app.constants import (
     get_all_tags, get_all_galaxies, get_all_categories, get_types_for_category,
@@ -183,3 +184,14 @@ def create_event_full(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/api/check-abuseipdb/bulk")
+def check_abuseipdb_bulk(ips: str):
+    ip_list = ips.split(",")
+    print(ip_list)
+    return check_ip_abuse_bulk(ip_list)
+    
+@app.get("/api/check-abuseipdb/{ip_address}")
+def check_abuseipdb(ip_address:str):
+    return check_ip_abuse(ip_address)
+

@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     misp_api_key: str
     api_key_name: str = "X-API-Key"
     api_key_value: str = "mist-secret-key-2026"
+    abuseipdb_api_key: Optional[str] = None
+
     
     class Config:
         env_file = ".env"
