@@ -9,7 +9,7 @@ from app.services.abuseipdb import check_ip_abuse, check_ip_abuse_bulk
 from app.services.misp import create_misp_event, create_misp_event_simple
 from app.services.opencti import check_ip_in_opencti, format_opencti_result_for_comment
 from app.constants import (
-    get_all_tags, get_all_galaxies, get_all_categories, get_types_for_category,
+    get_all_tags, get_all_galaxies, get_all_categories, get_creator_options, get_types_for_category,
     DISTRIBUTION_OPTIONS, THREAT_LEVEL_OPTIONS, ANALYSIS_OPTIONS
 )
 from app.services.misp_parser import parse_bulk_upload
@@ -74,6 +74,11 @@ def health_check():
 def get_distribution():
     """Get distribution level options"""
     return {"options": DISTRIBUTION_OPTIONS}
+
+@app.get("/api/creators")
+def get_creators():
+    """Get available creators"""
+    return {"options": get_creator_options()}
 
 @app.get("/api/threat-level")
 def get_threat_level():
@@ -140,6 +145,7 @@ def create_event(
     Requires: X-API-Key header
     """
     result = create_misp_event_simple(
+        creator_key=request.creator_key,
         title=request.title,
         ips=request.ips,
         distribution=request.distribution,
@@ -167,6 +173,7 @@ def create_event_full(
     
     try:
         result = create_misp_event(
+            creator_key=request.creator_key,
             date=request.date,
             distribution=request.distribution,
             threat_level_id=request.threat_level_id,
