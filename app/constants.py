@@ -1,4 +1,5 @@
 from enum import Enum
+from app.config import settings
 
 # ============================================
 # TAGS (paprastieji)
@@ -108,6 +109,13 @@ ANALYSIS_OPTIONS = {
     2: "Completed",
 }
 
+CREATOR_APIS ={
+    settings.misp_aurelija_api_key: "Aurelija",
+    settings.misp_evija_api_key: "Evija",
+    settings.misp_kamile_api_key: "Kamile",
+    settings.misp_viktorija_api_key: "Viktorija"
+}
+
 
 # ============================================
 # Helper funkcijos
@@ -154,3 +162,6 @@ def get_types_for_category(category: str):
             return CATEGORY_TYPES.get(cat_enum, CATEGORY_TYPES[AttributeCategories.OTHER])
     
     return CATEGORY_TYPES[AttributeCategories.OTHER]
+
+def get_creator_options():
+    return CREATOR_APIS  # Tiesiog grąžinam dict!

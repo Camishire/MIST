@@ -2,6 +2,7 @@ from pymisp import PyMISP, MISPEvent, MISPAttribute
 from app.config import settings
 
 def create_misp_event(
+    creator_key: str,
     date: str,
     distribution: int,
     threat_level_id: int,
@@ -15,7 +16,7 @@ def create_misp_event(
     # 1. Connect to MISP
     misp = PyMISP(
         url=settings.misp_url,
-        key=settings.misp_api_key,
+        key=creator_key,
         ssl=False
     )
     

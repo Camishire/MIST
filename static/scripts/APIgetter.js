@@ -13,6 +13,17 @@ async function getDistributionOptions() {
     }
 }
 
+async function getCreatorOptions() {
+    try {
+        const response = await fetch('/api/creators');
+        const data = await response.json();
+        return data.options || {};
+    } catch (error) {
+        console.error('Error fetching creators:', error);
+        return {};
+    }
+}
+
 async function getThreatLevelOptions() {
     try {
         const response = await fetch('/api/threat-level');

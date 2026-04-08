@@ -1,10 +1,3 @@
-// ============================================
-// EVENT SUBMISSION HANDLER
-// ============================================
-
-// API Key is defined in BulkGrabber.js (shared global)
-
-// Attach event listener immediately (scripts load after DOM)
 const submitBtn = document.getElementById('submitBtn');
 
 if (submitBtn) {
@@ -80,6 +73,7 @@ function collectFormData() {
     const eventDate = document.getElementById('eventDate').value;
     const distribution = parseInt(document.getElementById('distributionSelect').value);
     const threatLevel = parseInt(document.getElementById('threatLevelSelect').value);
+    const creatorKey = document.getElementById('creatorSelect').value; // PATAISYTA: creator → creator_key
     const analysis = parseInt(document.getElementById('analysisSelect').value);
     const eventInfo = document.getElementById('eventInfo').value;
     
@@ -91,6 +85,7 @@ function collectFormData() {
     const attributes = collectTableAttributes();
     
     return {
+        creator_key: creatorKey, // PATAISYTA: creator → creator_key
         date: eventDate,
         distribution: distribution,
         threat_level_id: threatLevel,
@@ -142,6 +137,12 @@ function collectTableAttributes() {
 // ============================================
 
 function validateEventData(data) {
+    // Check creator key
+    if (!data.creator_key || data.creator_key.trim() === '') {
+        alert('❌ Please select creator');
+        return false;
+    }
+    
     // Check required fields
     if (!data.date) {
         alert('❌ Please select event date');
@@ -186,6 +187,7 @@ function resetForm() {
     
     // Reset dropdowns
     document.getElementById('distributionSelect').selectedIndex = 0;
+    document.getElementById('creatorSelect').selectedIndex = 0; // Reset creator
     document.getElementById('threatLevelSelect').selectedIndex = 0;
     document.getElementById('analysisSelect').selectedIndex = 0;
     

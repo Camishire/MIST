@@ -8,6 +8,7 @@ class CreateEventRequest(BaseModel):
     distribution: int = 2
     threat_level_id: int = 2
     analysis: int = 1
+    creator_key: str
 
 
 class AttributeModel(BaseModel):
@@ -21,6 +22,7 @@ class AttributeModel(BaseModel):
 
 class CreateEventFullRequest(BaseModel):
     """Full event creation request"""
+    creator_key: str
     date: str
     distribution: int
     threat_level_id: int

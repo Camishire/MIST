@@ -11,7 +11,7 @@ function renderSimpleDropdown(containerId, options, typeLabel, selectedId) {
 
     let html = `
         <select class="form-select shadow-sm" id="${selectedId}" style="border-radius: 12px;">
-            <option value="" selected disabled>Pasirinkti ${typeLabel}...</option>`;
+            <option value="" selected disabled>. . .</option>`;
     
     const entries = Object.entries(options);
     

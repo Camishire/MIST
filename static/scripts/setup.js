@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Load all dropdowns
     await setupDistributionDropdown();
+    await setupCreatorDropdown();
     await setupThreatLevelDropdown();
     await setupAnalysisDropdown();
     await setupTagsDropdown();
@@ -21,6 +22,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 async function setupDistributionDropdown() {
     const options = await getDistributionOptions();
     renderSimpleDropdown('distributionDropdownRoot', options, 'Distribution', 'distributionSelect');
+    ///this is giving me second options in list, i need the first ones :p 
+}
+
+// ============================================
+// CREATOR DROPDOWN
+// ============================================
+async function setupCreatorDropdown() {
+    const options = await getCreatorOptions();
+    renderSimpleDropdown('creatorDropdownRoot', options, 'Creator', 'creatorSelect');
 }
 
 // ============================================
