@@ -46,7 +46,6 @@ async function handleBulkUpload() {
         
         if (data.attributes && data.attributes.length > 0) {
             await populateEditableTable(data.attributes);
-            alert(`✅ Imported ${data.count} attributes!`);
             textarea.value = '';
         }
         

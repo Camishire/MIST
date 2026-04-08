@@ -42,7 +42,7 @@ function renderNestedDropdown(containerId, data, typeLabel, targetListId) {
         <div class="dropdown">
             <button class="btn btn-white border w-100 dropdown-toggle shadow-sm d-flex justify-content-between align-items-center" 
                     type="button" data-bs-toggle="dropdown" style="border-radius: 12px;">
-                Pasirinkti ${typeLabel}
+                Pick your ${typeLabel}
             </button>
             <ul class="dropdown-menu w-100 shadow-lg border-0">`;
 

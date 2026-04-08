@@ -124,8 +124,6 @@ function processResults(results, ipRows) {
             }
         }
     });
-    
-    alert(`✅ Enriched ${successCount} out of ${ipRows.length} IP attributes with AbuseIPDB + OpenCTI data!`);
 }
 
 console.log('✅ Bulk AbuseIPDB handler loaded!');
