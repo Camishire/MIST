@@ -18,7 +18,8 @@ Perfect for those times when you have 50 IPs from a security alert and don't wan
 ### Prerequisites
 - Python 3.8+
 - MISP instance with API access
-- (Optional) OpenCTI and AbuseIPDB API keys for enrichment
+- (Optional) OpenCTI instance for session-based authentication
+- (Optional) AbuseIPDB API key for IP enrichment
 
 ### Installation
 
@@ -61,15 +62,108 @@ API_KEY=your_random_secure_key_here
 
 ### Running
 
+#### Local Development
 ```bash
-# Development
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-
-# Production (systemd service recommended)
-uvicorn main:app --host 0.0.0.0 --port 8000
+# Set environment to local (uses mock authentication)
+export MIST_ENV=local
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8001
 ```
 
-Then visit `http://localhost:8000` in your browser.
+Then visit `http://localhost:8001` in your browser.
+
+#### Production Deployment
+
+**Option 1: Standalone (direct access)**
+```bash
+# Set environment to production (uses OpenCTI authentication)
+export MIST_ENV=production
+uvicorn app.main:app --host 0.0.0.0 --port 8001
+```
+
+**Option 2: Behind Apache Reverse Proxy (recommended)**
+
+MIST works best when deployed alongside OpenCTI using Apache as a reverse proxy. This allows session-based authentication and SSL termination.
+
+1. **Update Apache VirtualHost** (e.g., `/etc/apache2/sites-available/your-domain.conf`):
+
+```apache
+<VirtualHost *:443>
+    ServerName your-domain.com
+    
+    # SSL configuration (use your existing certs)
+    SSLEngine on
+    SSLCertificateFile /path/to/cert.pem
+    SSLCertificateKeyFile /path/to/key.pem
+    
+    # MIST proxy configuration (order matters!)
+    ProxyPass /auth http://127.0.0.1:8001/auth
+    ProxyPassReverse /auth http://127.0.0.1:8001/auth
+    
+    ProxyPass /api http://127.0.0.1:8001/api
+    ProxyPassReverse /api http://127.0.0.1:8001/api
+    
+    ProxyPass /events http://127.0.0.1:8001/events
+    ProxyPassReverse /events http://127.0.0.1:8001/events
+    
+    ProxyPass /mist/static http://127.0.0.1:8001/static
+    ProxyPassReverse /mist/static http://127.0.0.1:8001/static
+    
+    <Location /mist>
+        ProxyPass http://127.0.0.1:8001
+        ProxyPassReverse http://127.0.0.1:8001
+        ProxyPreserveHost On
+        ProxyPassReverseCookiePath / /mist
+    </Location>
+    
+    # Your existing OpenCTI proxy (keep last!)
+    ProxyPass / http://127.0.0.1:8080/
+    ProxyPassReverse / http://127.0.0.1:8080/
+</VirtualHost>
+```
+
+2. **Create systemd service** (`/etc/systemd/system/mist.service`):
+
+```ini
+[Unit]
+Description=MIST FastAPI App
+After=network.target
+
+[Service]
+User=www-data
+WorkingDirectory=/opt/MIST
+Environment="MIST_ENV=production"
+ExecStart=/opt/MIST/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8001
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+3. **Enable and start**:
+
+```bash
+systemctl daemon-reload
+systemctl enable mist.service
+systemctl start mist.service
+systemctl reload apache2
+```
+
+4. **Access**: `https://your-domain.com/mist/`
+
+**Authentication:**
+- Production mode requires valid OpenCTI session (`opencti_session` cookie)
+- Users must login to OpenCTI first, then navigate to `/mist`
+- Local mode uses mock authentication for development
+
+## 🔐 Authentication Modes
+
+MIST supports two authentication modes via the `MIST_ENV` environment variable:
+
+- **`MIST_ENV=production`**: Real OpenCTI session-based auth (production deployments)
+- **`MIST_ENV=local`** (or unset): Mock authentication for local testing
+
+Set this in your systemd service, `.env` file, or export before running uvicorn.
 
 ## 📡 API Endpoints
 
@@ -80,14 +174,19 @@ Then visit `http://localhost:8000` in your browser.
 - `GET /api/creators` - Get available MISP API key options
 
 ### Enrichment Services
-- `POST /enrich/opencti` - Enrich IP with OpenCTI threat intelligence
-- `POST /enrich/abuseipdb` - Get AbuseIPDB reputation data for IPs
+- `GET /api/enrich/{ip}` - Enrich IP with both OpenCTI and AbuseIPDB data
+- `GET /api/check-opencti/{ip}` - Get OpenCTI threat intelligence for IP
+- `GET /api/check-abuseipdb/{ip}` - Get AbuseIPDB reputation data for IP
 
 ### Metadata
 - `GET /api/categories` - Get available MISP attribute categories
-- `GET /api/types` - Get available MISP attribute types (optionally filtered by category)
-- `GET /api/tags` - Search MISP tags
-- `GET /api/galaxies` - Search MISP galaxy clusters
+- `GET /api/categories/{category}/types` - Get valid types for a category
+- `GET /api/tags/categories` - Get all MISP tags grouped by category
+- `GET /api/galaxies/categories` - Get all MISP galaxy clusters by category
+
+### Authentication
+- `GET /auth/status` - Check authentication status
+- `GET /auth/login` - Redirect to OpenCTI login (production mode)
 
 ## 🛠️ Tech Stack
 
@@ -98,12 +197,12 @@ Then visit `http://localhost:8000` in your browser.
 
 **Frontend:**
 - Vanilla JavaScript (no framework bloat)
-- Bootstrap 5 (UI components)
+- Custom CSS (pink Y2K Monster High aesthetic)
 - Custom table editor for bulk attribute management
 
 **Integrations:**
 - MISP (threat intelligence platform)
-- OpenCTI (threat intel enrichment)
+- OpenCTI (session auth + threat intel enrichment)
 - AbuseIPDB (IP reputation)
 
 ## 🎯 Features in Detail
@@ -125,20 +224,25 @@ Click to enrich IPs with:
 - **OpenCTI**: Get related threat intel, indicators, observables
 - **AbuseIPDB**: Check IP reputation and abuse reports
 
+Results are automatically formatted into the comment field for easy submission.
+
 ## 📝 Development Notes
 
 ### Project Structure
-```
+```python
 MIST/
 ├── app/
 │   ├── services/          # Business logic (MISP, OpenCTI, AbuseIPDB)
 │   ├── config.py          # Settings & environment variables
 │   ├── constants.py       # MISP constants (distributions, threat levels)
-│   └── models.py          # Pydantic models
+│   ├── models.py          # Pydantic models
+│   ├── opencti_auth.py    # Production OpenCTI authentication
+│   └── opencti_auth_local.py  # Mock authentication for local dev
 ├── static/
-│   ├── js/                # Frontend JavaScript modules
-│   └── css/               # Styles
-├── main.py                # FastAPI app entry point
+│   ├── scripts/           # Frontend JavaScript modules
+│   ├── style.css          # Pink Y2K aesthetic
+│   └── index.html         # Main interface
+├── main.py                # FastAPI app entry point (deprecated, use app/main.py)
 └── requirements.txt       # Python dependencies
 ```
 
@@ -148,7 +252,7 @@ Edit `.env` and add more keys:
 MISP_WORKER4_API_KEY=another_key_here
 ```
 
-Then update `config.py`:
+Then update `app/constants.py`:
 ```python
 def get_creator_options():
     return {
@@ -164,7 +268,8 @@ def get_creator_options():
 - **Never commit `.env`** - it contains sensitive API keys
 - Use the included `.env.example` as a template
 - Set a strong `API_KEY` to protect the web interface
-- Consider running behind a reverse proxy (nginx) with HTTPS
+- Production mode requires OpenCTI authentication
+- Run behind HTTPS in production (Apache reverse proxy recommended)
 
 ## 🤝 Contributing
 
@@ -180,7 +285,7 @@ MIT License - do whatever you want with it.
 
 ## 🙏 Acknowledgments
 
-Built out of frustration with MISP's bulk import workflows. Special thanks to the PyMISP maintainers for making the API actually usable.
+Built out of frustration with MISP's bulk import workflows. Special thanks to PyMISP maintainers for making the API actually usable
 
 ---
 
