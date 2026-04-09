@@ -14,19 +14,19 @@ from app.constants import (
 )
 from app.services.misp_parser import parse_bulk_upload
 from app.config import settings
-from app.opencti_auth import require_opencti_auth, OpenCTIAuth
 import logging
 import os
-from app.opencti_auth import require_opencti_auth, OpenCTIAuth
-from app.opencti_auth_local import require_opencti_auth, OpenCTIAuth
+
+# Toggle between real and mock auth
+if os.getenv("MIST_ENV") == "production":
+    from app.opencti_auth import require_opencti_auth, OpenCTIAuth
+    print("🔒 Using REAL OpenCTI authentication")
+else:
+    from app.opencti_auth_local import require_opencti_auth, OpenCTIAuth
+    print("🧪 Using MOCK authentication (local testing)")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-if os.getenv("MIST_ENV") == "production":
-    print("🔒 Using REAL OpenCTI authentication")
-else:
-    print("🧪 Using MOCK authentication (local testing)")
 
 api_key_header = APIKeyHeader(name=settings.api_key_name, auto_error=False)
 
