@@ -1,5 +1,5 @@
 import re
-from app.constants import AttributeCategories, get_types_for_category
+from app.constants import AttributeCategories
 
 def parse_bulk_upload(data: list[str]) -> dict:
     parsed_attributes = []
@@ -22,7 +22,6 @@ def parse_bulk_upload(data: list[str]) -> dict:
 
 
 def detect_attribute_type(value: str) -> dict:
-    # EMAIL pattern
     if re.search(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', value):
         return {
             "category": AttributeCategories.PAYLOAD_DELIVERY.value,
@@ -54,7 +53,6 @@ def detect_attribute_type(value: str) -> dict:
         }
     
     
-    # Default: jei nepažįstame - komentaras
     return {
         "category": AttributeCategories.OTHER.value,
         "type": "comment",

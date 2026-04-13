@@ -13,14 +13,12 @@ def create_misp_event(
     attributes: list[dict]
 ) -> dict:
 
-    # 1. Connect to MISP
     misp = PyMISP(
         url=settings.misp_url,
         key=creator_key,
         ssl=False
     )
     
-    # 2. Create event
     event = MISPEvent()
     event.info = info
     event.distribution = distribution
@@ -28,15 +26,12 @@ def create_misp_event(
     event.analysis = analysis
     event.date = date
     
-    # 3. Add tags
     for tag in tags:
         event.add_tag(tag)
     
-    # 4. Add galaxies (pridedami kaip tag'ai!)
     for galaxy in galaxies:
         event.add_tag(galaxy)
     
-    # 5. Add attributes
     for attr in attributes:
         event.add_attribute(
             type=attr['type'],
@@ -46,7 +41,6 @@ def create_misp_event(
             to_ids=attr.get('to_ids', False)
         )
     
-    # 6. Send to MISP
     try:
         result = misp.add_event(event)
         return result
@@ -54,7 +48,7 @@ def create_misp_event(
         raise Exception(f"Failed to create MISP event: {str(e)}")
 
 
-# Backwards compatibility - original function
+# Backwards compatibility
 def create_misp_event_simple(
     title: str, 
     ips: list, 
@@ -62,7 +56,6 @@ def create_misp_event_simple(
     threat_level_id: int = 2,
     analysis: int = 1
 ):
-    """Original simple function for IP-only events"""
     
     misp = PyMISP(
         url=settings.misp_url,

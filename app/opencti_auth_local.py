@@ -7,10 +7,7 @@ class OpenCTIAuth:
         return {
             "id": "test-user-123",
             "name": "Local Test User",
-            "user_email": "test@localhost.dev",
-            "capabilities": [
-                {"name": "KNOWLEDGE_KNUPDATE"}
-            ]
+            "user_email": "test@localhost.dev"
         }
     
     @staticmethod

@@ -2,7 +2,6 @@ from pydantic import BaseModel
 from typing import Optional
 
 class CreateEventRequest(BaseModel):
-    """Old simple request (backwards compatibility)"""
     title: str
     ips: list[str]
     distribution: int = 2
@@ -12,7 +11,6 @@ class CreateEventRequest(BaseModel):
 
 
 class AttributeModel(BaseModel):
-    """Single attribute"""
     category: str
     type: str
     value: str
@@ -21,7 +19,6 @@ class AttributeModel(BaseModel):
 
 
 class CreateEventFullRequest(BaseModel):
-    """Full event creation request"""
     creator_key: str
     date: str
     distribution: int
