@@ -1,7 +1,3 @@
-// ============================================
-// DROPDOWN RENDERING
-// ============================================
-
 function renderSimpleDropdown(containerId, options, typeLabel, selectedId) {
     const container = document.getElementById(containerId);
     if (!container) {
@@ -83,7 +79,6 @@ function renderNestedDropdown(containerId, data, typeLabel, targetListId) {
     html += `</ul></div>`;
     container.innerHTML = html;
     
-    // Initialize tooltips AFTER rendering
     setTimeout(() => {
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         tooltipTriggerList.map(el => new bootstrap.Tooltip(el));
@@ -124,4 +119,4 @@ function escapeHtml(text) {
     return text.replace(/[&<>"']/g, m => map[m]);
 }
 
-console.log('✅ Dropdowns.js loaded!');
+console.log('Dropdowns.js loaded!');

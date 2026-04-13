@@ -1,24 +1,18 @@
 const submitBtn = document.getElementById('submitBtn');
 
 if (submitBtn) {
-    console.log('✅ Submit button found, attaching listener');
     submitBtn.addEventListener('click', handleEventSubmit);
-} else {
-    console.error('❌ Submit button NOT found!');
 }
 
 async function handleEventSubmit() {
-    console.log('🚀 Submitting MISP event...');
+    console.log('Submitting MISP event...');
     
-    // Collect all form data
     const eventData = collectFormData();
     
-    // Validate
     if (!validateEventData(eventData)) {
         return;
     }
     
-    // Show loading state
     const submitBtn = document.getElementById('submitBtn');
     const originalText = submitBtn.innerHTML;
     submitBtn.disabled = true;
@@ -35,7 +29,7 @@ async function handleEventSubmit() {
         });
         
         if (response.status === 403) {
-            alert('❌ Authentication failed: Invalid API Key');
+            alert('Authentication failed: Invalid API Key');
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalText;
             return;
@@ -44,21 +38,18 @@ async function handleEventSubmit() {
         const result = await response.json();
         
         if (result.success) {
-            alert(`✅ Event created successfully!\n\nEvent ID: ${result.event_id}\n\nOpening in MISP...`);
-            // Open MISP event in new tab
+            alert(`Event created successfully!\n\nEvent ID: ${result.event_id}\n\nOpening in MISP...`);
             window.open(result.url, '_blank');
             
-            // Reset form
             resetForm();
         } else {
-            alert(`❌ Failed to create event: ${result.message || 'Unknown error'}`);
+            alert(`Failed to create event: ${result.message || 'Unknown error'}`);
         }
         
     } catch (error) {
-        console.error('❌ Submission error:', error);
-        alert(`❌ Error: ${error.message}`);
+        console.error('Submission error:', error);
+        alert(`Error: ${error.message}`);
     } finally {
-        // Restore button
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
     }
@@ -69,23 +60,20 @@ async function handleEventSubmit() {
 // ============================================
 
 function collectFormData() {
-    // Event metadata
     const eventDate = document.getElementById('eventDate').value;
     const distribution = parseInt(document.getElementById('distributionSelect').value);
     const threatLevel = parseInt(document.getElementById('threatLevelSelect').value);
-    const creatorKey = document.getElementById('creatorSelect').value; // PATAISYTA: creator → creator_key
+    const creatorKey = document.getElementById('creatorSelect').value;
     const analysis = parseInt(document.getElementById('analysisSelect').value);
     const eventInfo = document.getElementById('eventInfo').value;
     
-    // Tags and galaxies from BadgeManager
     const tags = selectedTags || [];
     const galaxies = selectedGalaxies || [];
     
-    // Attributes from table
     const attributes = collectTableAttributes();
     
     return {
-        creator_key: creatorKey, // PATAISYTA: creator → creator_key
+        creator_key: creatorKey,
         date: eventDate,
         distribution: distribution,
         threat_level_id: threatLevel,
@@ -107,7 +95,6 @@ function collectTableAttributes() {
     const attributes = [];
     
     rows.forEach(row => {
-        // Skip empty placeholder row
         if (row.querySelector('td[colspan]')) {
             return;
         }
@@ -137,40 +124,38 @@ function collectTableAttributes() {
 // ============================================
 
 function validateEventData(data) {
-    // Check creator key
     if (!data.creator_key || data.creator_key.trim() === '') {
-        alert('❌ Please select creator');
+        alert('Please select creator');
         return false;
     }
     
-    // Check required fields
     if (!data.date) {
-        alert('❌ Please select event date');
+        alert('Please select event date');
         return false;
     }
     
     if (isNaN(data.distribution) || data.distribution === '') {
-        alert('❌ Please select distribution level');
+        alert('Please select distribution level');
         return false;
     }
     
     if (isNaN(data.threat_level_id) || data.threat_level_id === '') {
-        alert('❌ Please select threat level');
+        alert('Please select threat level');
         return false;
     }
     
     if (isNaN(data.analysis) || data.analysis === '') {
-        alert('❌ Please select analysis status');
+        alert('Please select analysis status');
         return false;
     }
     
     if (!data.info || data.info.trim() === '') {
-        alert('❌ Please enter event description');
+        alert('Please enter event description');
         return false;
     }
     
     if (data.attributes.length === 0) {
-        alert('❌ Please add at least one attribute');
+        alert('Please add at least one attribute');
         return false;
     }
     
@@ -182,30 +167,24 @@ function validateEventData(data) {
 // ============================================
 
 function resetForm() {
-    // Reset date
     document.getElementById('eventDate').valueAsDate = new Date();
     
-    // Reset dropdowns
     document.getElementById('distributionSelect').selectedIndex = 0;
-    document.getElementById('creatorSelect').selectedIndex = 0; // Reset creator
+    document.getElementById('creatorSelect').selectedIndex = 0;
     document.getElementById('threatLevelSelect').selectedIndex = 0;
     document.getElementById('analysisSelect').selectedIndex = 0;
     
-    // Reset event info
     document.getElementById('eventInfo').value = '';
     
-    // Clear badges
     selectedTags = [];
     selectedGalaxies = [];
     renderBadges('selectedTags');
     renderBadges('selectedGalaxies');
     
-    // Clear table
     const tbody = document.getElementById('attrTableBody');
     tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted small">Lentelė tuščia. Pridėkite atributų.</td></tr>';
     
-    // Clear bulk textarea
     document.getElementById('bulkGrabberTextarea').value = '';
 }
 
-console.log('✅ EventSubmit.js loaded!');
+console.log('EventSubmit.js loaded!');
