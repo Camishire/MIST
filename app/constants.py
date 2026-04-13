@@ -6,7 +6,6 @@ from app.config import settings
 # ============================================
 
 class TLPTags(Enum):
-    """TLP Classification tags with descriptions"""
     CLEAR = ("tlp:clear", "You can share this with anyone, without restriction.")
     GREEN = ("tlp:green", "You can share this with members of your organization only.")
     AMBER = ("tlp:amber", "You can share this with members of your organization and other organizations you trust.")
@@ -56,7 +55,6 @@ class MITREAttackPatterns(Enum):
 # ============================================
 
 class AttributeCategories(str, Enum):
-    """MISP Attribute Categories"""
     PAYLOAD_DELIVERY = 'Payload delivery'
     NETWORK_ACTIVITY = 'Network activity'
     OTHER = 'Other'
@@ -122,19 +120,15 @@ CREATOR_APIS ={
 # ============================================
 
 def get_distribution_options():
-    """Gauti distribution options kaip dict"""
-    return DISTRIBUTION_OPTIONS  # Tiesiog grąžinam dict!
+    return DISTRIBUTION_OPTIONS
 
 def get_threat_level_options():
-    """Gauti threat level options kaip dict"""
     return THREAT_LEVEL_OPTIONS
 
 def get_analysis_options():
-    """Gauti analysis options kaip dict"""
     return ANALYSIS_OPTIONS
 
 def get_all_tags():
-    """Gauti visus tag'us kaip dictionary pagal kategorijas"""
     return {
         "tlp": [tag.value for tag in TLPTags],
         "threat_level": [tag.value for tag in ThreatLevelTags],
@@ -144,7 +138,6 @@ def get_all_tags():
     }
 
 def get_all_galaxies():
-    """Gauti visas galaxies kaip dictionary pagal kategorijas"""
     return {
         "country": [g.value for g in CountryGalaxies],
         "sector": [g.value for g in SectorGalaxies],
@@ -152,11 +145,9 @@ def get_all_galaxies():
     }
 
 def get_all_categories():
-    """Gauti visas attribute kategorijas"""
     return [category.value for category in AttributeCategories]
 
 def get_types_for_category(category: str):
-    """Gauti valid types konkrečiai kategorijai"""
     for cat_enum in AttributeCategories:
         if cat_enum.value == category:
             return CATEGORY_TYPES.get(cat_enum, CATEGORY_TYPES[AttributeCategories.OTHER])
@@ -164,4 +155,4 @@ def get_types_for_category(category: str):
     return CATEGORY_TYPES[AttributeCategories.OTHER]
 
 def get_creator_options():
-    return CREATOR_APIS  # Tiesiog grąžinam dict!
+    return CREATOR_APIS

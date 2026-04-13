@@ -17,16 +17,28 @@ from app.config import settings
 import logging
 import os
 
-# Toggle between real and mock auth
+# ============================================================================
+# AUTHENTICATION TOGGLE (PRODUCTION vs LOCAL)
+# ============================================================================
+
 if os.getenv("MIST_ENV") == "production":
     from app.opencti_auth import require_opencti_auth, OpenCTIAuth
-    print("🔒 Using REAL OpenCTI authentication")
+    print("Using real OpenCTI authentication.")
 else:
     from app.opencti_auth_local import require_opencti_auth, OpenCTIAuth
-    print("🧪 Using MOCK authentication (local testing)")
+    print("Using MOCK authentication (local testing).")
 
+
+# ============================================================================
+# LOGGING SETUP
+# ============================================================================
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+# ============================================================================
+# API KEY AUTHENTICATION
+# ============================================================================
 
 api_key_header = APIKeyHeader(name=settings.api_key_name, auto_error=False)
 
@@ -39,12 +51,20 @@ async def verify_api_key(api_key: str = Security(api_key_header)):
     return api_key
 
 
-# FASTAPI APP
+# ============================================================================
+# FASTAPI APP INITIALIZATION
+# ============================================================================
+
 app = FastAPI(
     title="MIST API",
     description="MISP Intelligence Submission Tool - Create MISP events with ease",
     version="2.0"
 )
+
+
+# ============================================================================
+# MIDDLEWARE (HTTP CACHE CONTROL)
+# ============================================================================
 
 @app.middleware("http")
 async def disable_cache(request, call_next):
@@ -55,13 +75,20 @@ async def disable_cache(request, call_next):
         response.headers["Expires"] = "0"
     return response
 
+
+# ============================================================================
+# STATIC FILES MOUNTING
+# ============================================================================
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
-# OPENCTI AUTH ENDPOINTS
+# ============================================================================
+# AUTHENTICATION ENDPOINTS
+# ============================================================================
+
 @app.get("/auth/status")
 async def auth_status(user = Depends(require_opencti_auth)):
-    """Check if user has valid OpenCTI session"""
     return {
         "authenticated": True,
         "user": {
@@ -73,69 +100,73 @@ async def auth_status(user = Depends(require_opencti_auth)):
 
 @app.get("/auth/login")
 async def login_redirect():
-    """Redirect to OpenCTI login"""
     return OpenCTIAuth.get_login_redirect()
 
 
-# MAIN PAGE (PROTECTED WITH OPENCTI AUTH)
+# ============================================================================
+# MAIN PAGE
+# ============================================================================
+
 @app.get("/")
 def root(user = Depends(require_opencti_auth)):
-    """Serve the main HTML interface - requires OpenCTI login"""
     logger.info(f"User accessed MIST: {user['name']} (ID: {user['id']})")
     return FileResponse("static/index.html")
 
 
-# PUBLIC ENDPOINTS
+# ============================================================================
+# HEALTH CHECK
+# ============================================================================
+
 @app.get("/health")
 def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy", "service": "MIST API", "version": "2.0", "auth": "OpenCTI"}
+    return {"status": "healthy",
+            "service": "MIST API",
+            "version": "2.0",
+            "auth": "OpenCTI"}
 
 
-# METADATA OPTIONS (Protected with OpenCTI auth)
+# ============================================================================
+# ENDPOINTS (DROPDOWNS)
+# ============================================================================
+
 @app.get("/api/distribution")
 def get_distribution(user = Depends(require_opencti_auth)):
-    """Get distribution level options"""
     return {"options": DISTRIBUTION_OPTIONS}
 
 @app.get("/api/creators")
 def get_creators(user = Depends(require_opencti_auth)):
-    """Get available creators"""
     return {"options": get_creator_options()}
 
 @app.get("/api/threat-level")
 def get_threat_level(user = Depends(require_opencti_auth)):
-    """Get threat level options"""
     return {"options": THREAT_LEVEL_OPTIONS}
 
 @app.get("/api/analysis")
 def get_analysis(user = Depends(require_opencti_auth)):
-    """Get analysis status options"""
     return {"options": ANALYSIS_OPTIONS}
 
 @app.get("/api/tags/categories")
 def list_tags(user = Depends(require_opencti_auth)):
-    """Get all available tags by category"""
     return get_all_tags()
 
 @app.get("/api/galaxies/categories")
 def list_galaxies(user = Depends(require_opencti_auth)):
-    """Get all available galaxies by category"""
     return get_all_galaxies()
 
 @app.get("/api/categories")
 def get_categories(user = Depends(require_opencti_auth)):
-    """Get all attribute categories"""
     return {"categories": get_all_categories()}
 
 @app.get("/api/categories/{category}/types")
 def get_category_types(category: str, user = Depends(require_opencti_auth)):
-    """Get valid types for a specific category"""
     types = get_types_for_category(category)
     return {"category": category, "types": types}
 
 
-# PROTECTED ENDPOINTS (OpenCTI Auth)
+# ============================================================================
+# BULK UPLOAD
+# ============================================================================
+
 class BulkUploadRequest(BaseModel):
     ips: list[str]
 
@@ -150,6 +181,11 @@ def bulk_upload(
     result = parse_bulk_upload(request.ips)
     logger.info(f"Bulk upload by {user['name']}: {len(request.ips)} items")
     return result
+
+
+# ============================================================================
+# EVENT CREATION
+# ============================================================================
 
 @app.post("/events")
 def create_event(
@@ -209,7 +245,10 @@ def create_event_full(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ENRICHMENT ENDPOINTS (Protected with OpenCTI auth) 
+# ============================================================================
+# ENRICHMENT ENDPOINTS
+# ============================================================================
+
 @app.get("/api/check-abuseipdb/bulk")
 def check_abuseipdb_bulk(ips: str, user = Depends(require_opencti_auth)):
     ip_list = ips.split(",")
@@ -223,9 +262,7 @@ def check_abuseipdb(ip_address: str, user = Depends(require_opencti_auth)):
 @app.get("/api/check-opencti/{ip_address}")
 def check_opencti(ip_address: str, user = Depends(require_opencti_auth)):
     result = check_ip_in_opencti(ip_address)
-    
     result["formatted_comment"] = format_opencti_result_for_comment(result)
-    
     return result
  
 @app.get("/api/check-opencti/bulk")
@@ -257,10 +294,8 @@ def enrich_ip_all_sources(ip_address: str, user = Depends(require_opencti_auth))
     abuse_data = check_ip_abuse(ip_address)
     opencti_data = check_ip_in_opencti(ip_address)
     
-    # Build formatted comment with sections
     sections = []
     
-    # AbuseIPDB section
     if not abuse_data.get("error"):
         abuse_score = abuse_data.get("abuseConfidenceScore", 0)
         abuse_reports = abuse_data.get("totalReports", 0)
@@ -275,7 +310,6 @@ def enrich_ip_all_sources(ip_address: str, user = Depends(require_opencti_auth))
             ]
             sections.append("\n".join(abuse_lines))
     
-    # OpenCTI section
     if opencti_data.get("found"):
         opencti_comment = format_opencti_result_for_comment(opencti_data)
         sections.append(opencti_comment)
@@ -284,7 +318,7 @@ def enrich_ip_all_sources(ip_address: str, user = Depends(require_opencti_auth))
     
     logger.info(f"IP enrichment by {user['name']}: {ip_address}")
     
-    # Return structure matching what frontend expects
+
     return {
         "ipAddress": ip_address,
         "abuseipdb": abuse_data,

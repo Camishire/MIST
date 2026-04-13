@@ -6,11 +6,7 @@ from typing import Optional, Dict, Any
 from datetime import datetime, timezone, timedelta
 
 def check_ip_in_opencti(ip_address: str) -> Dict[str, Any]:
-    """
-    Query OpenCTI for specific IP address and return threat intelligence data
-    """
-    
-    # GraphQL query to get sightings for specific IP
+
     SIGHTINGS_QUERY = """{
       stixSightingRelationships(
         first: 100
@@ -51,7 +47,6 @@ def check_ip_in_opencti(ip_address: str) -> Dict[str, Any]:
     }"""
     
     try:
-        # Execute GraphQL query
         response = requests.post(
             f"{settings.opencti_url}/graphql",
             json={"query": SIGHTINGS_QUERY},
@@ -67,7 +62,6 @@ def check_ip_in_opencti(ip_address: str) -> Dict[str, Any]:
         data = response.json()
         sightings = data.get("data", {}).get("stixSightingRelationships", {}).get("edges", [])
         
-        # Find sightings for our specific IP
         ip_sightings = []
         ip_info = None
         
@@ -87,18 +81,15 @@ def check_ip_in_opencti(ip_address: str) -> Dict[str, Any]:
                 "message": "No data found in OpenCTI"
             }
         
-        # Extract IP-level info
         score = ip_info.get("x_opencti_score", 0)
         ip_description = ip_info.get("x_opencti_description", "")
         created_by = ip_info.get("createdBy", {}).get("name", "Unknown")
         
-        # Parse threat type from first sighting
         first_sighting = ip_sightings[0]
         sighting_desc = first_sighting.get("description", "")
         threat_type = parse_threat(sighting_desc, ip_description)
         country = parse_country(ip_description, sighting_desc)
         
-        # Collect all systems that detected this IP
         systems = []
         for sighting in ip_sightings:
             to_obj = sighting.get("to", {})
@@ -106,10 +97,8 @@ def check_ip_in_opencti(ip_address: str) -> Dict[str, Any]:
             if system_name and system_name not in systems:
                 systems.append(system_name)
         
-        # Total sightings count
         total_sightings = sum(s.get("attribute_count", 1) for s in ip_sightings)
         
-        # Most recent and oldest sighting dates
         last_seen = ip_sightings[0].get("last_seen")
         first_seen = min(
             (s.get("first_seen") for s in ip_sightings if s.get("first_seen")),
@@ -140,22 +129,15 @@ def check_ip_in_opencti(ip_address: str) -> Dict[str, Any]:
 
 
 def parse_threat(sighting_desc: str, ip_desc: str) -> str:
-    """
-    Parse threat type from sighting description
-    Based on the working code logic
-    """
     desc = sighting_desc or ""
     
-    # Look for "Threat indicators: ..."
     m = re.search(r'Threat indicators?:\s*(.+)', desc)
     if m:
         indicators = m.group(1).strip()
         
-        # Check for HTTP methods
         http_m = re.search(r'HTTP methods?:\s*(.+)', desc)
         if http_m:
             methods = http_m.group(1).strip()
-            # Clean up indicators
             indicators = re.sub(r',?\s*HTTP \w+ request', '', indicators).strip().strip(',').strip()
             raw = f"HTTP {methods}" + (f" | {indicators}" if indicators else "")
         else:
@@ -163,7 +145,6 @@ def parse_threat(sighting_desc: str, ip_desc: str) -> str:
         
         return normalize_threat(raw)
     
-    # Try JSON parsing (for Elastic logs)
     json_match = re.search(r'```json\s*(\{.*?\})\s*```', desc, re.DOTALL)
     if json_match:
         try:
@@ -181,9 +162,6 @@ def parse_threat(sighting_desc: str, ip_desc: str) -> str:
 
 
 def parse_country(ip_desc: str, sighting_desc: str) -> str:
-    """
-    Parse country code from IP description or sighting
-    """
     if ip_desc:
         m = re.search(r'countryCode:\s*([A-Z]{2})', ip_desc)
         if m:
@@ -204,12 +182,6 @@ def parse_country(ip_desc: str, sighting_desc: str) -> str:
 
 
 def normalize_threat(threat: str) -> str:
-    """
-    Normalize threat type for grouping
-    - Remove specific port numbers: "Non-standard port (12345)" → "Non-standard port"
-    - Remove duplicates
-    """
-    # Remove port numbers
     threat = re.sub(r'Non-standard port \(\d+\)', 'Non-standard port', threat)
     
     # Remove duplicates
@@ -223,7 +195,6 @@ def normalize_threat(threat: str) -> str:
     
     threat = ', '.join(unique_parts)
     
-    # Fallback
     if threat == "AbuseIPDB score=100":
         return "Unknown / Other"
     
@@ -231,9 +202,6 @@ def normalize_threat(threat: str) -> str:
 
 
 def format_opencti_result_for_comment(data: Dict[str, Any]) -> str:
-    """
-    Format OpenCTI data into a readable multi-line comment string for MISP
-    """
     if data.get("error"):
         return f"OpenCTI error: {data['error']}"
     
@@ -242,35 +210,29 @@ def format_opencti_result_for_comment(data: Dict[str, Any]) -> str:
     
     lines = ["OpenCTI:"]
     
-    # Score
     score = data.get("score", 0)
     if score > 0:
         lines.append(f"  • Score: {score}/100")
     
-    # Threat type
     threat = data.get("threat_type")
     if threat and threat != "Unknown / Other":
         lines.append(f"  • Threat: {threat}")
     
-    # Country
     country = data.get("country")
     if country and country != "Unknown":
         lines.append(f"  • Country: {country}")
     
-    # Systems
     systems = data.get("systems", [])
     if systems:
-        systems_str = ", ".join(systems[:3])  # Show max 3 systems
+        systems_str = ", ".join(systems[:3])
         if len(systems) > 3:
             systems_str += f" +{len(systems)-3} more"
         lines.append(f"  • Detected by: {systems_str}")
     
-    # Sightings
     total = data.get("total_sightings", 0)
     if total > 0:
         lines.append(f"  • Sightings: {total}")
     
-    # Last seen
     last_seen = data.get("last_seen")
     if last_seen:
         try:

@@ -17,7 +17,6 @@ def check_ip_abuse(ip_address):
         response.raise_for_status()
         data = response.json()
         
-        # Extract data from AbuseIPDB response
         abuse_data = data.get('data', {})
         
         return {
@@ -30,7 +29,6 @@ def check_ip_abuse(ip_address):
             "usageType": abuse_data.get('usageType', 'N/A')
         }
     except requests.RequestException as e:
-        # Return error info instead of raising exception
         return {
             "ipAddress": ip_address,
             "error": str(e),
