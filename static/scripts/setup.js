@@ -1,11 +1,6 @@
-// ============================================
-// PAGE SETUP - Initialization
-// ============================================
-
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('Initializing MIST Creator...');
     
-    // Load all dropdowns
     await setupDistributionDropdown();
     await setupCreatorDropdown();
     await setupThreatLevelDropdown();
@@ -13,52 +8,34 @@ document.addEventListener('DOMContentLoaded', async () => {
     await setupTagsDropdown();
     await setupGalaxiesDropdown();
     
-    console.log('✅ All dropdowns loaded!');
+    console.log('All dropdowns loaded!');
 });
 
-// ============================================
-// DISTRIBUTION DROPDOWN
-// ============================================
 async function setupDistributionDropdown() {
     const options = await getDistributionOptions();
     renderSimpleDropdown('distributionDropdownRoot', options, 'Distribution', 'distributionSelect');
 }
 
-// ============================================
-// CREATOR DROPDOWN
-// ============================================
 async function setupCreatorDropdown() {
     const options = await getCreatorOptions();
     renderSimpleDropdown('creatorDropdownRoot', options, 'Creator', 'creatorSelect');
 }
 
-// ============================================
-// THREAT LEVEL DROPDOWN
-// ============================================
 async function setupThreatLevelDropdown() {
     const options = await getThreatLevelOptions();
     renderSimpleDropdown('threatLevelDropdownRoot', options, 'Threat Level', 'threatLevelSelect');
 }
 
-// ============================================
-// ANALYSIS DROPDOWN
-// ============================================
 async function setupAnalysisDropdown() {
     const options = await getAnalysisOptions();
     renderSimpleDropdown('analysisDropdownRoot', options, 'Analysis', 'analysisSelect');
 }
 
-// ============================================
-// TAGS DROPDOWN
-// ============================================
 async function setupTagsDropdown() {
     const data = await getTagsCategories();
     renderNestedDropdown('tagsDropdownRoot', data, 'Tags', 'selectedTags');
 }
 
-// ============================================
-// GALAXIES DROPDOWN
-// ============================================
 async function setupGalaxiesDropdown() {
     const data = await getGalaxiesCategories();
     renderNestedDropdown('galaxyDropdownRoot', data, 'Galaxies', 'selectedGalaxies');

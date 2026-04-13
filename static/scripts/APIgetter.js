@@ -1,7 +1,3 @@
-// ============================================
-// API GETTER - All GET requests
-// ============================================
-
 async function getDistributionOptions() {
     try {
         const response = await fetch('/api/distribution');
