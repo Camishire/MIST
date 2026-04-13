@@ -1,14 +1,12 @@
-console.log('🔐 Auth checker loaded...');
+console.log('Auth checker loaded...');
 
-// Check authentication on page load
 async function checkAuth() {
     try {
         const response = await fetch('/auth/status');
         
         if (response.status === 401) {
-            // Not authenticated - redirect to OpenCTI
             const data = await response.json();
-            console.log('❌ Not authenticated. Redirecting to OpenCTI...');
+            console.log('Not authenticated. Redirecting to OpenCTI...');
             
             document.body.innerHTML = `
                 <div style="
@@ -44,7 +42,6 @@ async function checkAuth() {
                 </div>
             `;
             
-            // Countdown and redirect
             let count = 3;
             const countdownEl = document.getElementById('countdown');
             const interval = setInterval(() => {
@@ -62,13 +59,12 @@ async function checkAuth() {
         
         if (response.ok) {
             const data = await response.json();
-            console.log('✅ Authenticated as:', data.user.name);
+            console.log('Authenticated as:', data.user.name);
             
-            // Store user info globally
             window.MIST_USER = data.user;
             
             const userName = data.user.name || data.user.email;
-            console.log(`👋 Welcome, ${userName}!`);
+            console.log(`Welcome, ${userName}!`);
             
             return true;
         }
@@ -76,9 +72,8 @@ async function checkAuth() {
         throw new Error('Unexpected response from auth check');
         
     } catch (error) {
-        console.error('❌ Auth check failed:', error);
+        console.error('Auth check failed:', error);
         
-        // Show error page
         document.body.innerHTML = `
             <div style="
                 display: flex;
@@ -123,7 +118,6 @@ async function checkAuth() {
     }
 }
 
-// Run auth check immediately
 checkAuth();
 
-console.log('✅ Auth.js loaded!');
+console.log('Auth.js loaded!');

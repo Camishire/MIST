@@ -150,4 +150,4 @@ async function getEnrichedDataForIndicators(indicators) {
     }
 }
 
-console.log('✅ APIgetter.js loaded!');
+console.log('APIgetter.js loaded!');

@@ -1,5 +1,3 @@
-
-
 async function postBulkUpload(data) {
     try {
         const response = await fetch('/api/bulk-upload', {
