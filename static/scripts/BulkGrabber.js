@@ -1,28 +1,20 @@
-// ============================================
-// BULK UPLOAD - Complete Handler with EDITABLE ROWS
-// ============================================
-
-console.log('🔍 BulkGrabber.js loaded!');
+console.log('BulkGrabber.js loaded!');
 
 const bulkBtn = document.getElementById('BulkUploadbtn');
 
 if (bulkBtn) {
-    console.log('✅ Attaching click handler to BulkUploadbtn');
+    console.log('Attaching click handler to BulkUploadbtn');
     bulkBtn.addEventListener('click', handleBulkUpload);
-} else {
-    console.error('❌ BulkUploadbtn not found!');
 }
 
 async function handleBulkUpload() {
-    console.log('🚀 handleBulkUpload called!');
-    
     const textarea = document.getElementById('bulkGrabberTextarea');
     const lines = textarea.value.split('\n')
         .map(l => l.trim())
         .filter(l => l && !l.startsWith('#'));
     
     if (lines.length === 0) {
-        alert('Įveskite bent vieną eilutę!');
+        alert('Please enter at least one indicator in the textarea!');
         return;
     }
     
@@ -37,12 +29,12 @@ async function handleBulkUpload() {
         });
         
         if (response.status === 403) {
-            alert('❌ Authentication failed: Invalid API Key');
+            alert('Authentication failed: Invalid API Key');
             return;
         }
         
         const data = await response.json();
-        console.log('📦 Response data:', data);
+        console.log('Response data:', data);
         
         if (data.attributes && data.attributes.length > 0) {
             await populateEditableTable(data.attributes);
@@ -50,8 +42,8 @@ async function handleBulkUpload() {
         }
         
     } catch (error) {
-        console.error('❌ Error:', error);
-        alert('❌ Failed to upload: ' + error.message);
+        console.error('Error:', error);
+        alert('Failed to upload: ' + error.message);
     }
 }
 
@@ -63,24 +55,21 @@ async function populateEditableTable(attributes) {
     const tbody = document.getElementById('attrTableBody');
     
     if (!tbody) {
-        console.error('❌ Table body not found!');
+        console.error('Table body not found!');
         return;
     }
     
-    // Fetch categories using APIgetter function
     const categoriesData = await getAllCategories();
     const categories = categoriesData.categories || [];
     
-    // Clear table
     tbody.innerHTML = '';
     
-    // Add editable rows
     for (const attr of attributes) {
         const row = await createEditableRow(attr, categories);
         tbody.appendChild(row);
     }
     
-    console.log('✅ Table populated with editable rows!');
+    console.log('Table populated with editable rows!');
 }
 
 // ============================================
@@ -90,7 +79,6 @@ async function populateEditableTable(attributes) {
 async function createEditableRow(attr, categories) {
     const tr = document.createElement('tr');
     
-    // Date input
     const tdDate = document.createElement('td');
     tdDate.innerHTML = `
         <input type="date" class="form-control form-control-sm" 
@@ -99,7 +87,6 @@ async function createEditableRow(attr, categories) {
     `;
     tr.appendChild(tdDate);
     
-    // Category dropdown
     const tdCategory = document.createElement('td');
     const categorySelect = document.createElement('select');
     categorySelect.className = 'form-select form-select-sm';
@@ -113,7 +100,6 @@ async function createEditableRow(attr, categories) {
         categorySelect.appendChild(option);
     });
     
-    // On category change, update type dropdown
     categorySelect.addEventListener('change', async function() {
         const typeSelect = tr.querySelector('td:nth-child(3) select');
         await updateTypeDropdown(typeSelect, this.value);
@@ -122,19 +108,16 @@ async function createEditableRow(attr, categories) {
     tdCategory.appendChild(categorySelect);
     tr.appendChild(tdCategory);
     
-    // Type dropdown
     const tdType = document.createElement('td');
     const typeSelect = document.createElement('select');
     typeSelect.className = 'form-select form-select-sm';
     typeSelect.style.cssText = 'border-radius: 8px; font-size: 0.85rem;';
     
-    // Fetch types for current category
     await updateTypeDropdown(typeSelect, attr.category, attr.type);
     
     tdType.appendChild(typeSelect);
     tr.appendChild(tdType);
     
-    // Value input (editable)
     const tdValue = document.createElement('td');
     tdValue.innerHTML = `
         <input type="text" class="form-control form-control-sm" 
@@ -143,7 +126,6 @@ async function createEditableRow(attr, categories) {
     `;
     tr.appendChild(tdValue);
 
-    // Comment field with auto-resize textarea and enrichment button
     const tdComment = document.createElement('td');
     tdComment.innerHTML = `
         <div style="display: flex; align-items: start; gap: 4px;">
@@ -172,14 +154,12 @@ async function createEditableRow(attr, categories) {
     `;
     tr.appendChild(tdComment);
 
-    // Auto-resize functionality
     const commentTextarea = tdComment.querySelector('.auto-resize-textarea');
     commentTextarea.addEventListener('input', function() {
         this.style.height = 'auto';
         this.style.height = this.scrollHeight + 'px';
     });
 
-    // ⭐ Enrich ALL button handler (AbuseIPDB + OpenCTI)
     const enrichAllBtn = tdComment.querySelector('.enrich-all-btn');
     enrichAllBtn.addEventListener('click', async function() {
         const ip = tdValue.querySelector('input').value.trim();
@@ -188,13 +168,11 @@ async function createEditableRow(attr, categories) {
             return;
         }
         
-        // Show loading state
         const originalHTML = enrichAllBtn.innerHTML;
         enrichAllBtn.disabled = true;
         enrichAllBtn.innerHTML = '⏳';
         
         try {
-            // Call combined enrichment endpoint
             const result = await getEnrichedDataForIndicator(ip);
             
             if (result.formatted_comment) {
@@ -202,10 +180,8 @@ async function createEditableRow(attr, categories) {
             } else if (result.error) {
                 commentTextarea.value = `Enrichment error: ${result.error}`;
             } else {
-                // Fallback - build from parts
                 const parts = [];
                 
-                // AbuseIPDB part
                 if (result.abuseipdb && !result.abuseipdb.error) {
                     const score = result.abuseipdb.abuseConfidenceScore || 0;
                     const reports = result.abuseipdb.totalReports || 0;
@@ -214,7 +190,6 @@ async function createEditableRow(attr, categories) {
                     }
                 }
                 
-                // OpenCTI part
                 if (result.opencti && result.opencti.found) {
                     const octParts = [];
                     if (result.opencti.score > 0) octParts.push(`Score: ${result.opencti.score}`);
@@ -232,7 +207,6 @@ async function createEditableRow(attr, categories) {
                 commentTextarea.value = parts.length > 0 ? parts.join(' | ') : 'No threat data found';
             }
             
-            // Trigger auto-resize
             commentTextarea.style.height = 'auto';
             commentTextarea.style.height = commentTextarea.scrollHeight + 'px';
             
@@ -242,13 +216,11 @@ async function createEditableRow(attr, categories) {
             commentTextarea.style.height = 'auto';
             commentTextarea.style.height = commentTextarea.scrollHeight + 'px';
         } finally {
-            // Restore button
             enrichAllBtn.disabled = false;
             enrichAllBtn.innerHTML = originalHTML;
         }
     });
     
-    // Action (delete button)
     const tdAction = document.createElement('td');
     tdAction.className = 'text-end';
     tdAction.innerHTML = `
@@ -297,10 +269,8 @@ async function updateTypeDropdown(selectElement, category, selectedType = null) 
     const data = await getTypesForCategory(category);
     const types = data.types || [];
     
-    // Clear existing options
     selectElement.innerHTML = '';
     
-    // Add new options
     types.forEach(type => {
         const option = document.createElement('option');
         option.value = type;

@@ -1,7 +1,3 @@
-// ============================================
-// BADGE MANAGEMENT
-// ============================================
-
 let selectedTags = [];
 let selectedGalaxies = [];
 
@@ -13,25 +9,20 @@ function addItem(value, targetListId) {
     const list = isTag ? selectedTags : selectedGalaxies;
     const max = isTag ? MAX_TAGS : MAX_GALAXIES;
     
-    // Check for duplicates
     if (list.includes(value)) {
-        alert('Šis elementas jau pridėtas!');
+        alert('This element is already added!');
         return false;
     }
     
-    // Check max limit
     if (list.length >= max) {
-        alert(`Maksimalus kiekis (${max}) pasiektas!`);
+        alert(`Maximum limit (${max}) reached!`);
         return false;
     }
     
-    // Add to array
     list.push(value);
-    
-    // Re-render badges
     renderBadges(targetListId);
     
-    return false; // Prevent default link behavior
+    return false;
 }
 
 function removeItem(index, listType) {
@@ -51,14 +42,12 @@ function renderBadges(listId) {
     const isTag = listId === 'selectedTags';
     const list = isTag ? selectedTags : selectedGalaxies;
     
-    // Empty state
     if (list.length === 0) {
-        const emptyText = isTag ? 'Pasirinkite žymes iš sąrašo' : 'Pasirinkite galaktikas';
+        const emptyText = isTag ? 'Please select tags from the list' : 'Please select galaxies from the list';
         container.innerHTML = `<small class="text-muted w-100 text-center">${emptyText}</small>`;
         return;
     }
     
-    // Render badges
     container.innerHTML = list.map((value, index) => {
         const formatted = isTag ? formatTagName(value) : formatGalaxyName(value);
         return `
@@ -70,7 +59,6 @@ function renderBadges(listId) {
     }).join('');
 }
 
-// Helper functions (if not already defined)
 function formatTagName(tag) {
     if (tag.includes('=')) {
         const match = tag.match(/"(.+?)"/);
