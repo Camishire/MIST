@@ -9,10 +9,6 @@ class Settings(BaseSettings):
     abuseipdb_api_key: Optional[str] = None
     opencti_url: str
     opencti_api_key: str
-    misp_aurelija_api_key: Optional[str] = None
-    misp_viktorija_api_key: Optional[str] = None
-    misp_kamile_api_key: Optional[str] = None
-    misp_evija_api_key: Optional[str] = None
 
     class Config:
         env_file = ".env"
