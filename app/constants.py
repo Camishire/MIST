@@ -108,10 +108,7 @@ ANALYSIS_OPTIONS = {
 }
 
 CREATOR_APIS ={
-    settings.misp_aurelija_api_key: "Aurelija",
-    settings.misp_evija_api_key: "Evija",
-    settings.misp_kamile_api_key: "Kamile",
-    settings.misp_viktorija_api_key: "Viktorija"
+    settings.misp_name_api_key: "name",
 }
 
 
